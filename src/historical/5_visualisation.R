@@ -15,10 +15,6 @@ library(broom)
 library(geojsonio)
 library(maptools)
 
-# Functions ---------------------------------------------------------------
-
-
-
 # Shape files -------------------------------------------------------------
 
 # Regions
