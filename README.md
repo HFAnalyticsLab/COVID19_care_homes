@@ -21,7 +21,16 @@ We are using pseudonymised data on care home characteristics from the Care Quali
 
 Data used for this analysis were anonymised in line with the ICO's Anonymisation Code of Practice. The data will be accessed in The Health Foundation's Secure Data Environment; a secure data analysis facility (accredited with the ISO27001 information security standard, and recognised for the NHS Digital Data Security and Protection Toolkit). No information that could directly identify a patient or other individual will be used.
 
-The shape files used to create [regional](https://data.gov.uk/dataset/18991e29-872b-41e0-8fe0-1bb30d17aee8/regions-december-2016-ultra-generalised-clipped-boundaries-in-england) and [local authority-level](https://data.gov.uk/dataset/45a1aaed-503a-4259-bd3e-27ce2ddc7b16/local-authority-districts-december-2016-super-generalised-clipped-boundaries-in-the-uk) maps can be downloaded from the Office for National Statistics website. 
+We are also using public data on [deaths in care homes in England](https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland) published by the ONS. 
+
+To aggregate and visualise this range of data sources at different geographical levels, we are using a number of publicly available look-up tables and shape files, mostly from the Office for National Statistics:
+
+* shape file used to create [regional](https://data.gov.uk/dataset/18991e29-872b-41e0-8fe0-1bb30d17aee8/regions-december-2016-ultra-generalised-clipped-boundaries-in-england) maps (December 2016 version, also known as local authority districts)
+* shape file used to create [Lower Tier Local Authority](https://data.gov.uk/dataset/45a1aaed-503a-4259-bd3e-27ce2ddc7b16/local-authority-districts-december-2016-super-generalised-clipped-boundaries-in-the-uk) maps (December 2016 version)
+* shape file used to create [Upper Tier Local Authority](https://data.gov.uk/dataset/53831348-9733-4e52-b9e6-1ddd6be94535/counties-and-unitary-authorities-december-2019-boundaries-uk-buc) maps (December 2019 version)
+* look-up table to [map LSOAs (2011) to local authority districts](http://geoportal1-ons.opendata.arcgis.com/datasets/6a46e14a6c2441e3ab08c7b277335558) (February 2020 version)
+* look-up table to [match LSOAs (2011) to the English Index of Multiple deprivation (2019)](https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019), see Table 7
+* look-up table to [match Lower Tier Local Authorities to Upper Tier Local Authorities](https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019) (April 2019 version)
 
 ## How does it work?
 
@@ -45,12 +54,17 @@ The following R packages (available on CRAN) are needed:
 
 ### Getting started
 
-[Sprint 1](src/historical) is based on historical data from 2017:
+[Sprint 1](src/sprint1_historical) is based on historical CQC data on care homes and SUS data on care home residents from 2017:
 * 1_load_data.R - reads data files from csv, saves them as Rds files
 * 2_care_homes.R - cleans and analyses care home information
 * 3_comorbidities.R - quantifies co-morbidites of care home residents 
 * 4_residents.R -  cleans and analyses care home resident characteristics
 * 5_visualisation.R - visualises the results scripts of 2-4
+
+[Sprint 2](src/sprint2) analyses current (May 2020) CQC data on COVID deaths in care homes and current (April 2020) CQC data on care homes:
+* 1_ONS_COVID_deaths.R - analyses data on all-cause and COVID-related deaths in care homes in England and produces maps
+* 2_care_homes.R - cleans and analyses care home information
+* 3_care_homes_visualisation.R  - visualises the results script 2
 
 ## References
 * Improvement Analytics Unit briefing. Emergency admissions to hospital from care homes: how often and what for? 2019. http://www.scie-socialcareonline.org.uk/emergency-admissions-to-hospital-from-care-homes-how-often-and-what-for/r/a110f00000THg3xAAD.
