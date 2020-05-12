@@ -17,7 +17,7 @@ THF_red <- '#dd0031'
 
 # Shape file  -------------------------------------------------------------
 
-# Upper tier local authority lookup file
+# Upper tier local authority shape file
 # https://data.gov.uk/dataset/53831348-9733-4e52-b9e6-1ddd6be94535/counties-and-unitary-authorities-december-2019-boundaries-uk-buc
 
 utla_2019_json <- geojson_read("shapefiles/Counties_and_Unitary_Authorities_(December_2019)_Boundaries_UK_BUC.geojson", what = "sp")
