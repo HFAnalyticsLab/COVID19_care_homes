@@ -13,7 +13,8 @@ library(maptools)
 
 # Colors ------------------------------------------------------------------
 THF_red <- '#dd0031'
-
+THF_50pct_light_blue <- '#aad3e5'
+THF_1_purple <- '#744284'
 
 # Shape file  -------------------------------------------------------------
 
@@ -30,6 +31,22 @@ utla_lookup <- utla_2019_json@data %>%
 utla_2019_json_df <- tidy(utla_2019_json, region = c("ctyua19cd")) %>% 
   filter(grepl("^E.*", id)) %>% 
   left_join(utla_lookup, by = c("id" = "ctyua19cd")) 
+
+# UTLA to region
+region_lookup <- read_csv("shapefiles/Ward_to_Local_Authority_District_to_County_to_Region_to_Country_(December_2019)_Lookup_in_United_Kingdom.csv",
+                          col_types = cols(
+                            FID = col_double(),
+                            WD19CD = col_character(),
+                            WD19NM = col_character(),
+                            LAD19CD = col_character(),
+                            LAD19NM = col_character(),
+                            CTY19CD = col_character(),
+                            CTY19NM = col_character(),
+                            RGN19CD = col_character(),
+                            RGN19NM = col_character(),
+                            CTRY19CD = col_character(),
+                            CTRY19NM = col_character()
+                          )) 
 
 # Import data -------------------------------------------------------------
 
@@ -68,8 +85,151 @@ ch_dealths_allcause_eng <- ch_deaths_allcause_la %>%
 ch_deaths_allcause_la <- ch_deaths_allcause_la %>% 
   filter(local_authority_name != "England")
 
+# Line graphs - England ---------------------------------------------------
 
-# Maps --------------------------------------------------------------------
+ch_deaths_eng <- ch_dealths_allcause_eng %>% 
+  left_join(ch_deaths_covid_eng %>% mutate(location_not_stated = replace_na(location_not_stated, 0)), 
+            by = c("date" = "notification_date")) %>% 
+  rename(covid_deaths_care_homes = "care_homes", 
+         covid_deaths_location_not_stated = "location_not_stated", 
+         all_cause_deaths_care_homes = "deaths") 
+
+(ch_deaths_eng %>% 
+  pivot_longer(-date, names_to = "type", values_to = "deaths")  %>% 
+  ggplot(aes(x = date, y = deaths, group = type, color = type)) +
+  geom_line() +
+  geom_point() +
+  theme_bw() +
+  scale_color_manual(values = c(THF_red, THF_50pct_light_blue, THF_1_purple),
+                     labels = c("Deaths in care homes, all-cause", "Deaths in care homes, COVID", "Deaths with unknown location, COVID")) +
+  theme(axis.title.x = element_blank(),
+        legend.position = "top",
+        legend.title = element_blank(),
+        legend.justification= c(1,0),
+        panel.grid = element_blank()) +
+  guides(color = guide_legend(nrow = 2, byrow = TRUE)) +
+  ylab("Number of deaths") +
+  labs(title = "Daily deaths in care homes", 
+       subtitle =  str_c("CQC data from ", min (ch_deaths_covid_la$date), " to ", 
+                         max(ch_deaths_covid_la$date)),
+       fill = "COVID deaths")) %>% 
+  ggsave("graphs/sprint_2/Care_homes_deaths_England.png", ., width = 6, height = 5)
+
+(ch_deaths_eng %>% 
+    pivot_longer(-date, names_to = "type", values_to = "deaths")  %>% 
+    group_by(type) %>% 
+    arrange(date) %>% 
+    mutate(deaths_cum = cumsum(deaths)) %>% 
+    ggplot(aes(x = date, y = deaths_cum, group = type, color = type)) +
+    geom_line() +
+    geom_point() +
+    theme_bw() +
+    scale_color_manual(values = c(THF_red, THF_50pct_light_blue, THF_1_purple),
+                       labels = c("Deaths in care homes, all-cause", "Deaths in care homes, COVID", "Deaths with unknown location, COVID")) +
+    theme(axis.title.x = element_blank(),
+          legend.position = "top",
+          legend.title = element_blank(),
+          legend.justification= c(1,0),
+          panel.grid = element_blank()) +
+    guides(color = guide_legend(nrow = 2, byrow = TRUE)) +
+    ylab("Number of deaths") +
+    labs(title = "Cumulative deaths in care homes", 
+         subtitle =  str_c("CQC data from ", min (ch_deaths_covid_la$date), " to ", 
+                           max(ch_deaths_covid_la$date)),
+         fill = "COVID deaths")) %>% 
+  ggsave("graphs/sprint_2/Care_homes_deaths_England_cumulative.png", ., width = 6, height = 5)
+
+
+
+# Regional aggregates ---------------------------------------------------
+
+ch_deaths_la <- ch_deaths_allcause_la %>% 
+  left_join(ch_deaths_covid_la, by = c("local_authority_name", "date")) %>% 
+  left_join(region_lookup[,c("LAD19NM", "RGN19CD", "RGN19NM")] %>% unique(), by = c("local_authority_name" = "LAD19NM"))  %>% 
+  left_join(region_lookup[,c("CTY19NM", "RGN19CD", "RGN19NM")] %>% unique(), by = c("local_authority_name" = "CTY19NM")) %>% 
+  mutate(RGN19NM = if_else(is.na(RGN19NM.x), RGN19NM.y, RGN19NM.x))
+
+ch_deaths_region <- ch_deaths_la %>% 
+  group_by(date, RGN19NM) %>% 
+  summarise(deaths = sum(deaths, na.rm = TRUE),
+            COVID_deaths = sum(COVID_deaths, na.rm = TRUE))
+
+# Daily deaths
+(ch_deaths_region %>% 
+    pivot_longer(c(-date, - RGN19NM), names_to = "type", values_to = "deaths")  %>% 
+    ggplot(aes(x = date, y = deaths, group = RGN19NM, color = RGN19NM)) +
+    facet_wrap("type", ncol = 2) +
+    geom_line() +
+    geom_point() +
+    theme_bw() +
+    theme(axis.title.x = element_blank(),
+          legend.position = "top",
+          legend.title = element_blank(),
+          legend.justification= c(1,0),
+          panel.grid = element_blank()) +
+    guides(color = guide_legend(nrow = 3, byrow = TRUE)) +
+    ylab("Number of deaths") +
+    labs(title = "Daily deaths in care homes", 
+         subtitle =  str_c("CQC data from ", min (ch_deaths_covid_la$date), " to ", 
+                           max(ch_deaths_covid_la$date)),
+         fill = "COVID deaths")) %>% 
+  ggsave("graphs/sprint_2/Care_homes_deaths_regions.png", ., width = 7, height = 5)
+
+# Cumulative deaths
+
+(ch_deaths_region %>% 
+    pivot_longer(c(-date, - RGN19NM), names_to = "type", values_to = "deaths")  %>% 
+    group_by(type, RGN19NM) %>% 
+    arrange(date) %>% 
+    mutate(deaths_cum = cumsum(deaths)) %>% 
+    ggplot(aes(x = date, y = deaths_cum, group = RGN19NM, color = RGN19NM)) +
+    facet_wrap("type", ncol = 2) +
+    geom_line() +
+    geom_point() +
+    theme_bw() +
+    theme(axis.title.x = element_blank(),
+          legend.position = "top",
+          legend.title = element_blank(),
+          legend.justification= c(1,0),
+          panel.grid = element_blank()) +
+    guides(color = guide_legend(nrow = 3, byrow = TRUE)) +
+    ylab("Number of deaths") +
+    labs(title = "Cumulative deaths in care homes", 
+         subtitle =  str_c("CQC data from ", min (ch_deaths_covid_la$date), " to ", 
+                           max(ch_deaths_covid_la$date)),
+         fill = "COVID deaths")) %>% 
+  ggsave("graphs/sprint_2/Care_homes_deaths_regions_cumulative.png", ., width = 7, height = 5)
+
+
+region_order <- c("London", "South East", "South West", "East of England", "East Midlands", "West Midlands",
+                  "Yorkshire and The Humber",  "North East", "North West")
+
+(ch_deaths_region %>% 
+    pivot_longer(c(-date, - RGN19NM), names_to = "type", values_to = "deaths")  %>% 
+    mutate(type = factor(type, levels = c("deaths", "COVID_deaths"))) %>% 
+    group_by(RGN19NM, type) %>% 
+    summarise(deaths = sum(deaths)) %>% 
+    group_by(type) %>% 
+    mutate(pct = str_c(round(100* deaths / sum(deaths), 0), "%"),
+           ch_region_fct = factor(RGN19NM, levels = rev(region_order))) %>% 
+    ggplot(aes(x = ch_region_fct, y = deaths)) +
+    facet_wrap("type", ncol = 2, scales = "free_x", labeller = as_labeller(c("deaths" = "All-cause deaths",
+                                                                             "COVID_deaths" = "Deaths related to COVID"))) +
+    geom_bar(stat = "identity", position = position_dodge(), fill = THF_red) +
+    geom_text(aes(label = pct, y = 0.9*deaths), size = 2, color = "white") +
+    coord_flip() +
+    theme_bw() +
+    theme(axis.title = element_blank(),
+          legend.position = "top",
+          legend.justification= c(1,0),
+          panel.grid.major.y = element_blank()) +
+    labs(title = "Cumulative deaths in care homes, by region", 
+         subtitle = str_c("CQC data from ", min (ch_deaths_covid_la$date), " to ", 
+                          max(ch_deaths_covid_la$date)))) %>% 
+    ggsave("graphs/sprint_2/Care_homes_deaths_by_region_bar.png", ., width = 6, height = 3)
+
+
+# UTLA maps --------------------------------------------------------------------
 
 # Care home COVID deaths to date
 ch_deaths_covid_la_cum <- ch_deaths_covid_la  %>% 
