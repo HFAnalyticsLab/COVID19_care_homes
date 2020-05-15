@@ -16,7 +16,7 @@ THF_red <- '#dd0031'
 THF_50pct_light_blue <- '#aad3e5'
 THF_1_purple <- '#744284'
 
-# Shape file  -------------------------------------------------------------
+# Shape files and lookups  -------------------------------------------------------------
 
 # Upper tier local authority shape file
 # https://data.gov.uk/dataset/53831348-9733-4e52-b9e6-1ddd6be94535/counties-and-unitary-authorities-december-2019-boundaries-uk-buc
@@ -153,6 +153,8 @@ ch_deaths_region <- ch_deaths_la %>%
   group_by(date, RGN19NM) %>% 
   summarise(deaths = sum(deaths, na.rm = TRUE),
             COVID_deaths = sum(COVID_deaths, na.rm = TRUE))
+
+saveRDS(ch_deaths_region, "processed_data/CH_deaths_by_region.Rds")
 
 # Daily deaths
 (ch_deaths_region %>% 
