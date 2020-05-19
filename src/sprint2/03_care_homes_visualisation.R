@@ -61,6 +61,8 @@ chnursion_regions <- summary_region_nursing[summary_region_nursing$type == "mean
                                               summary_region_nursing$ch_nursing == 0,]
 size_order <- chnursion_regions$ch_region[order(chnursion_regions$value)] 
 
+
+
 # Care home size, mean and median
 (summary_region %>% 
   filter(type %in% c("mean_chsize", "median_chsize")) %>% 
@@ -115,6 +117,14 @@ size_order <- chnursion_regions$ch_region[order(chnursion_regions$value)]
     scale_fill_manual(values = c(THF_red, THF_50pct_light_blue), labels = c("Residential care homes", "Nursing homes")) +
     labs(title = "Mean size of care homes within regions in England", subtitle = "April 2020", caption = "Source: CQC")) %>% 
   ggsave("graphs/sprint_2/Care_home_size_by_region_and_type2.png", ., width = 6, height = 5)
+
+summary_region_nursing %>% 
+  filter(type == "mean_chsize") %>% 
+  select(-type, mean_chsize = value) %>% 
+  mutate(ch_nursing = ifelse(ch_nursing == 0, "residential", "nursing")) %>% 
+  pivot_wider(names_from = "ch_nursing", values_from = "mean_chsize") %>% 
+ write_csv("processed_data/CH_by_region_chnursing_meansize.csv")
+
 
 # Visualise care home location  ------------------------------------------------------------------
 
@@ -190,6 +200,10 @@ summary_region_IMD_all <- summary_region_IMD %>%
   summarise(ch = sum(value)) %>% 
   group_by(ch_region) %>% 
   mutate(pct = 100* ch / sum(ch))
+
+summary_region_IMD_all %>% 
+  write_csv("processed_data/CH_by_region_IMDquintiles.csv")
+
 
 IMDquintiles_regions <- summary_region_IMD_all[summary_region_IMD_all$IMD_quintile_fct == "1 most deprived",]
 IMD_order <- IMDquintiles_regions$ch_region[order(IMDquintiles_regions$pct)] 

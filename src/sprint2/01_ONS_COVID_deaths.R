@@ -50,12 +50,18 @@ ch_deaths <- ch_deaths %>%
 
 saveRDS(ch_deaths, "processed_data/CH_deaths_by_region.Rds")
 
+ch_deaths %>% 
+  filter(date == max(date) & type == "covid") %>% 
+  write_csv("processed_data/CH_deaths_by_region_covid_cumulative.csv")
+
+
 ch_deaths_eng <- ch_deaths %>% 
   group_by(date, type) %>% 
   summarise(deaths = sum(deaths),
             deaths_cum = sum(deaths_cum))
 
 saveRDS(ch_deaths_eng, "processed_data/CH_deaths_england.Rds")
+
 
 # Line graphs - England ---------------------------------------------------
 
@@ -80,7 +86,7 @@ saveRDS(ch_deaths_eng, "processed_data/CH_deaths_england.Rds")
        fill = "COVID deaths")) %>% 
   ggsave("graphs/sprint_2/Care_homes_deaths_England.png", ., width = 6, height = 5)
 
-( %>% 
+(ch_deaths_eng %>% 
     ggplot(aes(x = date, y = deaths_cum, group = type, color = type)) +
     geom_line() +
     geom_point() +

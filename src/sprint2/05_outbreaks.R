@@ -22,6 +22,11 @@ ch_outbreaks <- read_ods("data/open/Care_home_outbreaks_of_COVID-19_Management_I
   clean_names() %>% 
   select(region_name, rgn09cd, all_outbreaks, number_of_care_homes, pct = percentage_of_care_homes_that_have_reported_an_outbreak)
 
+ch_outbreaks %>% 
+  select(region_name, all_outbreaks, number_of_care_homes, pct) %>% 
+  write_csv("processed_data/CH_outbreaks_by_region.csv")
+
+
 (ch_outbreaks %>% 
     filter(region_name != "Unspecified") %>% 
     ggplot(aes(x = fct_reorder(region_name, pct), y = pct)) +

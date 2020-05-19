@@ -143,6 +143,10 @@ region_combined_wide <- region_combined %>%
   mutate(deaths_cum_covid_expected = sum(deaths_cum_covid) * (percent_beds/100),
          deaths_cum_covid_excess_pct = round(100*((deaths_cum_covid/deaths_cum_covid_expected)-1),1))
 
+region_combined_wide %>% 
+  select(region, beds, percent_beds, deaths_cum_covid, deaths_cum_covid_expected, deaths_cum_covid_excess_pct) %>% 
+ write_csv("processed_data/CH_by_region_beds_coviddeaths.csv")
+
 region_shape <- regions_json_df %>% 
   left_join(region_combined_wide, 
             by = c("id" = "region"))
