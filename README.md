@@ -25,8 +25,7 @@ Data used for this analysis were anonymised in line with the ICO's Anonymisation
 ### Open data
 We are also using publicly available data on 
 * [Deaths involving COVID-19 in the care sector, England and Wales](https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/articles/deathsinvolvingcovid19inthecaresectorenglandandwales/deathsoccurringupto1may2020andregisteredupto9may2020provisional) published by the ONS
-* [COVID-19: number of outbreaks in care homes]
-# (https://www.gov.uk/government/statistical-data)-sets/covid-19-number-of-outbreaks-in-care-homes-management-information) published by PHE
+* [The number of COVID-19 outbreaks in care homes](https://www.gov.uk/government/statistical-data)-sets/covid-19-number-of-outbreaks-in-care-homes-management-information) published by PHE
 
 
 ### Reference data
