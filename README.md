@@ -13,24 +13,30 @@ This analysis will address:
 * What are the potential transmission routes for COVID-19, based on how frequently residents attend hospital?
 * WHat is the impact of COVID-19 on secondary care utilisation of care home residents? Are there early signs that care may be deteriorating?
 
-## Data source
+## Data sources
 
 The analysis will be performed over several sprints, starting with historical data and updating the results as new data becomes available. 
 
+### Person-level data
 We are using pseudonymised data on care home characteristics from the Care Quality Commission (similar to the publicly available [care directory on the CQC website](https://www.cqc.org.uk/files/cqc-care-directory-filters-1-april-2020)), linked to pseudonymised patient records from [Secondary Uses Service](https://digital.nhs.uk/services/secondary-uses-service-sus)a national administrative database of all inpatient admissions, A&E attendances and outpatient appointments funded by the NHS in England. Access to this data has been granted as the analysis is carried out under instruction from NHS England.
 
 Data used for this analysis were anonymised in line with the ICO's Anonymisation Code of Practice. The data will be accessed in The Health Foundation's Secure Data Environment; a secure data analysis facility (accredited with the ISO27001 information security standard, and recognised for the NHS Digital Data Security and Protection Toolkit). No information that could directly identify a patient or other individual will be used.
 
-We are also using public data on [deaths in care homes in England](https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland) published by the ONS. 
+### Open data
+We are also using publicly available data on 
+* [Deaths involving COVID-19 in the care sector, England and Wales](https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/articles/deathsinvolvingcovid19inthecaresectorenglandandwales/deathsoccurringupto1may2020andregisteredupto9may2020provisional) published by the ONS
+* [COVID-19: number of outbreaks in care homes]
+# (https://www.gov.uk/government/statistical-data)-sets/covid-19-number-of-outbreaks-in-care-homes-management-information) published by PHE
 
+
+### Reference data
 To aggregate and visualise this range of data sources at different geographical levels, we are using a number of publicly available look-up tables and shape files, mostly from the Office for National Statistics:
 
 * shape file used to create [regional](https://data.gov.uk/dataset/18991e29-872b-41e0-8fe0-1bb30d17aee8/regions-december-2016-ultra-generalised-clipped-boundaries-in-england) maps (December 2016 version, also known as local authority districts)
 * shape file used to create [Lower Tier Local Authority](https://data.gov.uk/dataset/45a1aaed-503a-4259-bd3e-27ce2ddc7b16/local-authority-districts-december-2016-super-generalised-clipped-boundaries-in-the-uk) maps (December 2016 version)
-* shape file used to create [Upper Tier Local Authority](https://data.gov.uk/dataset/53831348-9733-4e52-b9e6-1ddd6be94535/counties-and-unitary-authorities-december-2019-boundaries-uk-buc) maps (December 2019 version)
-* look-up table to [map LSOAs (2011) to local authority districts](http://geoportal1-ons.opendata.arcgis.com/datasets/6a46e14a6c2441e3ab08c7b277335558) (February 2020 version)
+* [Postcode to Output Area to Lower Layer Super Output Area to Middle Layer Super Output Area to Local Authority District (February 2020) Lookup in the UK](http://geoportal1-ons.opendata.arcgis.com/datasets/6a46e14a6c2441e3ab08c7b277335558)
 * look-up table to [match LSOAs (2011) to the English Index of Multiple deprivation (2019)](https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019), see Table 7
-* look-up table to [match Lower Tier Local Authorities to Upper Tier Local Authorities](https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019) (April 2019 version)
+
 
 ## How does it work?
 
@@ -51,27 +57,37 @@ The following R packages (available on CRAN) are needed:
 * [**broom**](https://cran.r-project.org/web/packages/broom/index.html) 
 * [**maptools**](https://cran.r-project.org/web/packages/maptools/index.html) 
 * [**geojsonio**](https://cran.r-project.org/web/packages/geojsonio/index.html) 
+* [**readODS**](https://cran.r-project.org/web/packages/readODS/index.html) (1.6.7)
 
 ### Getting started
 
-[Sprint 1](src/sprint1_historical) is based on historical CQC data on care homes and SUS data on care home residents from 2017:
+[Sprint 1](src/sprint1_historical) is an analysis of historical CQC data on care homes (care home registrations) and SUS data on care home residents from October 2017:
 * 1_load_data.R - reads data files from csv, saves them as Rds files
 * 2_care_homes.R - cleans and analyses care home information
 * 3_comorbidities.R - quantifies co-morbidites of care home residents 
 * 4_residents.R -  cleans and analyses care home resident characteristics
 * 5_visualisation.R - visualises the results scripts of 2-4
 
-[Sprint 2](src/sprint2) analyses current (May 2020) CQC data on COVID deaths in care homes and current (April 2020) CQC data on care homes:
-* 1_ONS_COVID_deaths.R - analyses data on all-cause and COVID-related deaths in care homes in England and produces maps
-* 2_care_homes.R - cleans and analyses care home information
-* 3_care_homes_visualisation.R  - visualises the results script 2
+[Sprint 2](src/sprint2) is an analysis that 
+1. combines current CQC data on care homes (care home registrations, April 2020) with ONS data on COVID deaths in care home residents (up to 1 May 2020) to understand how regions in England have been affected and
+2. puts this into context with PHE data on the number of care homes that have reported suspected or confirmed
+COVID-19 outbreaks (up to 14 May 2020)
+
+* 01_ONS_COVID_deaths.R - analyses data on all-cause and COVID-related deaths in care homes in England and produces maps
+* 02_care_homes.R - cleans and analyses care home information
+* 03_care_homes_visualisation.R  - visualises the results from script 2
+* 04_combined_vis.R - combined and visualiseses deaths in care home residents with regional distribution of care homes
+* 05_outbreaks.R - analyses and visualises data on COVID-19 outbreaks in care homes 
 
 ## References
 * Improvement Analytics Unit briefing. Emergency admissions to hospital from care homes: how often and what for? 2019. http://www.scie-socialcareonline.org.uk/emergency-admissions-to-hospital-from-care-homes-how-often-and-what-for/r/a110f00000THg3xAAD.
 * Quality Watch. Focus on: Hospital admissions from care homes. 2015. https://www.health.org.uk/publications/qualitywatch-focus-on-hospital-admissions-from-care-homes
+* The Health Foundation COVID-19 chart series, 13 May 2020, [Care homes have seen the biggest increase in deaths since the start of the outbreak](https://www.health.org.uk/news-and-comment/charts-and-infographics/deaths-from-any-cause-in-care-homes-have-increased)
+* The Health Foundation press release, 15 May 2020, [Care home deaths from COVID-19 over 50% higher than previously estimated](https://www.health.org.uk/news-and-comment/news/care-home-deaths-from-covid-19-over-50-per-cent-higher-than-previously-estimated)
 
 ## Authors
-* **Fiona Grimm** - [@fiona_grimm](https://twitter.com/fiona_grimm) - [fiona-grimm](https://github.com/fiona-grimm)
+* **Fiona Grimm** - on [Twitter](https://twitter.com/fiona_grimm) or [GitHub](https://github.com/fiona-grimm)
+* **Karen Hodgson** - on [Twitter](https://twitter.com/KarenHodgePodge) or [GitHub](https://github.com/KarenHodgson)
 
 The unnesting function is based on the R-bloggers post ["(Much) faster unnesting with data.table"](https://www.r-bloggers.com/much-faster-unnesting-with-data-table/) by Johannes B. Gruber.
 
