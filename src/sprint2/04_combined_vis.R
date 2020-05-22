@@ -141,10 +141,13 @@ region_order_COVID <- order_table_COVID$region[order(order_table_COVID$value)]
 region_combined_wide <- region_combined %>% 
   pivot_wider(names_from = "var", values_from = "value") %>% 
   mutate(deaths_cum_covid_expected = sum(deaths_cum_covid) * (percent_beds/100),
-         deaths_cum_covid_excess_pct = round(100*((deaths_cum_covid/deaths_cum_covid_expected)-1),1))
+         deaths_cum_covid_excess_pct = round(100*((deaths_cum_covid/deaths_cum_covid_expected)-1),1),
+         deaths_cum_covid_per_100bed = round(100*deaths_cum_covid / beds,2))
 
 region_combined_wide %>% 
-  select(region, beds, percent_beds, deaths_cum_covid, deaths_cum_covid_expected, deaths_cum_covid_excess_pct) %>% 
+  select(region, beds, percent_beds, deaths_cum_covid, deaths_cum_covid_expected, deaths_cum_covid_excess_pct,
+         deaths_cum_covid_per_100bed) %>% 
+  arrange(desc(deaths_cum_covid_per_100bed)) %>% 
  write_csv("processed_data/CH_by_region_beds_coviddeaths.csv")
 
 region_shape <- regions_json_df %>% 
