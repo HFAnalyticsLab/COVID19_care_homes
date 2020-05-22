@@ -52,6 +52,7 @@ saveRDS(ch_deaths, "processed_data/CH_deaths_by_region.Rds")
 
 ch_deaths %>% 
   filter(date == max(date) & type == "covid") %>% 
+  select(-date, -deaths) %>% 
   write_csv("processed_data/CH_deaths_by_region_covid_cumulative.csv")
 
 
