@@ -27,182 +27,18 @@ sevendayavg <- function(col, rounding_digits = 0){
   
 }
 
-# Import data  ------------------------------------------------------------------
-
-# summary of the number of admissions and discharges in England by day
-# file created and released from the secure server by RW on 5.6.2020
-discharges <- read_xlsx("data/sprint_3/Discharge Summary March 20 data.xlsx",
-                            sheet = "Daily Discharge 19 20 Jan - Apr") %>% 
-  select(disch_day = `Disch Day`, 
-         disch_month = `Disch Month`,
-         SUS_dischother_2019_daily = dischother_2019, 
-         SUS_dischch_2019_daily = dischch_2019,
-         SUS_dischall_2019_daily = dischall_2019, 
-         SUS_dischother_2020_daily = dischother_2020, 
-         SUS_dischch_2020_daily = dischch_2020, 
-         SUS_dischall_2020_daily = dischall_2020, 
-         NHS_dischch_2020_daily = "Discharges from hospital to care home, 2020",
-         NHS_dischch_2020_sevendaymean = "Discharges from hospital to care home 2020 - seven day rolling average",
-         NHS_dischall_2020_daily = "All hospital discharges, 2020", 
-         NHS_dischall_2020_sevendaymean = "All hospital discharges, 2020 - seven day rolling average",
-         NHS_dischch_2019_daily = "Discharges from hospital to care home, 2019",
-         NHS_dischch_2019_sevendaymean = "Discharges from hospital to care home 2019 - seven day rolling average",
-         NHS_dischall_2019_daily = "All hospital discharges,2019",
-         NHS_dischall_2019_sevendaymean = "All hospital discharges, 2019 - seven day rolling average"
-         ) %>% 
-  mutate(SUS_dischch_2020_sevendaymean = sevendayavg(SUS_dischch_2020_daily),
-         SUS_dischall_2020_sevendaymean = sevendayavg(SUS_dischall_2020_daily),
-         SUS_dischother_2020_sevendaymean = sevendayavg(SUS_dischother_2020_daily),
-         SUS_dischch_2019_sevendaymean = sevendayavg(SUS_dischch_2019_daily),
-         SUS_dischall_2019_sevendaymean = sevendayavg(SUS_dischall_2019_daily),
-         SUS_dischother_2019_sevendaymean = sevendayavg(SUS_dischother_2019_daily),
-         NHS_dischother_2020_daily = NHS_dischall_2020_daily - NHS_dischch_2020_daily,
-         NHS_dischother_2020_sevendaymean = sevendayavg(NHS_dischother_2020_daily),
-         NHS_dischother_2019_daily = NHS_dischall_2019_daily - NHS_dischch_2019_daily,
-         NHS_dischother_2019_sevendaymean = sevendayavg(NHS_dischother_2019_daily),
-         SUS_dischch_2020_dailypct = round(100* SUS_dischch_2020_daily / SUS_dischall_2020_daily, 2),
-         SUS_dischch_2019_dailypct = round(100* SUS_dischch_2019_daily / SUS_dischall_2019_daily, 2),
-         NHS_dischch_2020_dailypct = round(100* NHS_dischch_2020_daily / NHS_dischall_2020_daily, 2),
-         NHS_dischch_2019_dailypct = round(100* NHS_dischch_2019_daily / NHS_dischall_2019_daily, 2),
-         SUS_dischch_2020_sevendaymeandailypct = sevendayavg(SUS_dischch_2020_dailypct, rounding_digits = 2),
-         SUS_dischch_2019_sevendaymeandailypct = sevendayavg(SUS_dischch_2019_dailypct, rounding_digits = 2),
-         NHS_dischch_2020_sevendaymeandailypct = sevendayavg(NHS_dischch_2020_dailypct, rounding_digits = 2),
-         NHS_dischch_2019_sevendaymeandailypct = sevendayavg(NHS_dischch_2019_dailypct, rounding_digits = 2)
-         )
-
-
-discharges <- discharges %>% 
-  pivot_longer(c(-disch_day, -disch_month), names_to = "type", values_to = "value") %>% 
-  separate(type, into = c("data_source", "discharge_dest", "disch_year", "stat"), sep = "_") %>% 
-  pivot_wider(names_from = "stat", values_from = "value")
-
-discharges <- discharges %>% 
-  mutate(date = ymd(str_c(disch_year, disch_month, disch_day)),
-         day_dummy = `year<-`(date, 0001))
-
-
-
-# Number of discharges ----------------------------------------------------
-
-
-(discharges %>% 
-    filter(discharge_dest != "dischall" ) %>% 
-    ggplot(aes(x = day_dummy, y = sevendaymean, color = data_source, group = data_source)) +
-    geom_line() +
-    geom_point(size = 1) +
-    theme_bw() +
-    facet_grid(discharge_dest ~ disch_year, scale = "free_y", 
-               labeller = as_labeller(c("dischch" = "care home discharges",
-                                        "dischother" = "other destination",
-                                        '2019' = '2019',
-                                        '2020' = '2020' #,
-                                        #"NHS" = "NHS England analysis",
-                                        #"SUS" = "THF SUS analysis"
-                                        ))) +
-    scale_color_manual(values = c(THF_red, THF_50pct_light_blue)) +
-    ylab("Number of discharges (7 day rolling average)") +
-    theme(axis.title.x = element_blank(),
-          panel.grid.major.x = element_blank()) +
-    labs(title = "Hospital discharges 2019 and 2020", 
-         caption = "Source: SUS, NHS England publication")) %>% 
-  ggsave("graphs/sprint_3/Discharges.png", ., width = 8, height = 4)
-
-(discharges %>% 
-    filter(discharge_dest == "dischall") %>% 
-    ggplot(aes(x = day_dummy, y = sevendaymean, color = data_source, group = data_source)) +
-    geom_line() +
-    geom_point(size = 1) +
-    theme_bw() +
-    facet_grid(. ~ disch_year, scale = "free_y", 
-               labeller = as_labeller(c("dischch" = "care home discharges",
-                                        "dischother" = "other destination",
-                                        '2019' = '2019',
-                                        '2020' = '2020' #,
-                                        #"NHS" = "NHS England analysis",
-                                        #"SUS" = "THF SUS analysis"
-               ))) +
-    scale_color_manual(values = c(THF_red, THF_50pct_light_blue)) +
-    ylab("Number of discharges (7 day rolling average)") +
-    theme(axis.title.x = element_blank(),
-          panel.grid.major.x = element_blank()) +
-    labs(title = "Hospital discharges 2019 and 2020 - all destinations", 
-         caption = "Source: SUS, NHS England publication")) %>% 
-  ggsave("graphs/sprint_3/Discharges_alldest.png", ., width = 6, height = 3)
-
-(discharges %>% 
-    filter(discharge_dest == "dischall") %>% 
-    ggplot(aes(x = day_dummy, y = daily, color = data_source, group = data_source)) +
-    geom_line() +
-    geom_point(size = 1) +
-    theme_bw() +
-    facet_grid(. ~ disch_year, scale = "free_y") +
-    scale_color_manual(values = c(THF_red, THF_50pct_light_blue)) +
-    ylab("Number of discharges per day") +
-    theme(axis.title.x = element_blank(),
-          panel.grid.major.x = element_blank()) +
-    labs(title = "Hospital discharges 2019 and 2020 - all destinations", 
-         caption = "Source: SUS, NHS England publication")) %>% 
-  ggsave("graphs/sprint_3/Discharges_alldest2.png", ., width = 6, height = 3)
-
-# Percent changes ---------------------------------------------------------
-# reference date is 30th jan
-
-discharges <- discharges %>% 
-  group_by(data_source, discharge_dest, disch_year) %>% 
-  mutate(ref_sevendaymean_30jan = sevendaymean[disch_day == 30 & disch_month == "Jan"],
-         pct_sevendaymean_30jan = round(100* sevendaymean/ref_sevendaymean_30jan, 1))
-
-
-(discharges %>% 
-    filter(discharge_dest != "dischother" ) %>% 
-    ggplot(aes(x = day_dummy, y = pct_sevendaymean_30jan, color = data_source, group = data_source)) +
-    geom_line() +
-    geom_point(size = 1) +
-    theme_bw() +
-    facet_grid(discharge_dest ~ disch_year, scale = "free_y", 
-               labeller = as_labeller(c("dischch" = "care home discharges",
-                                        "dischall" = "all discharges",
-                                        '2019' = '2019',
-                                        '2020' = '2020' #,
-                                        #"NHS" = "NHS England analysis",
-                                        #"SUS" = "THF SUS analysis"
-               ))) +
-    scale_color_manual(values = c(THF_red, THF_50pct_light_blue)) +
-    ylab("% changes in discharges (7 day rolling average)") +
-    theme(axis.title.x = element_blank(),
-          panel.grid.major.x = element_blank()) +
-    labs(title = "Hospital discharges 2019 and 2020", 
-         subtitle = 'Relative to 30 January',
-         caption = "Source: SUS, NHS England publication")) %>% 
-  ggsave("graphs/sprint_3/Discharges_pctchange.png", ., width = 8, height = 4)
-
-
-# Percent of discharges that went to care homes ---------------------------
-
-(discharges %>% 
-   filter(discharge_dest == "dischch" ) %>% 
-   ggplot(aes(x = day_dummy, y = sevendaymeandailypct, color = data_source, group = data_source)) +
-   geom_line() +
-   geom_point(size = 1) +
-   theme_bw() +
-   facet_grid(. ~ disch_year, scale = "free_y") +
-   scale_color_manual(values = c(THF_red, THF_50pct_light_blue)) +
-   ylab("% discharges to care homes (7 day rolling average)") +
-   theme(axis.title.x = element_blank(),
-         panel.grid.major.x = element_blank()) +
-   labs(title = "Hospital discharges 2019 and 2020", 
-        subtitle = 'Percentage to care homes',
-        caption = "Source: SUS, NHS England publication")) %>% 
-  ggsave("graphs/sprint_3/Discharges_pctcarehomes.png", ., width = 6, height = 4)
-
-
-# Data until end of April -------------------------------------------------
+#### Admission & discharges until end of April (deaths included in other discharges) ------------------------------------------------------------------
 
 # summary of the number of admissions and discharges in England by day
 # file created and released from the secure server by RW on 5.6.2020
 discharges_april <- read_xlsx("data/sprint_3/2020_06_15/01 Hospital Admission and Discharge to Care Homes - Summary.xlsx",
                         sheet = "Disch 1420 All Exclusions") 
 
+admissions_april <- read_xlsx("data/sprint_3/2020_06_15/01 Hospital Admission and Discharge to Care Homes - Summary.xlsx",
+                              sheet = "Adm 1420 All Exclusions") 
+
+
+## Discharges
 discharges_april <- discharges_april %>%
   pivot_longer(c(-dischday, -dischmnth), names_to = "type", values_to = "value") %>% 
   separate(type, into = c("type", "disch_year"), sep = "_") %>% 
@@ -313,12 +149,7 @@ discharges_april <- discharges_april %>%
          subtitle = "7-day moving averages,\nshown relative to the mean of 2015-2019")) %>% 
   ggsave("graphs/sprint_3/Discharges_percent_mean_2015_to_2019.png", ., width = 5, height = 4)
 
-
-# summary of the number of admissions and discharges in England by day
-# file created and released from the secure server by RW on 5.6.2020
-admissions_april <- read_xlsx("data/sprint_3/2020_06_15/01 Hospital Admission and Discharge to Care Homes - Summary.xlsx",
-                              sheet = "Adm 1420 All Exclusions") 
-
+## Admissions
 admissions_april <- admissions_april %>%
   pivot_longer(c(-admday, -admmnth), names_to = "type", values_to = "value") %>% 
   separate(type, into = c("type", "adm_year"), sep = "_") %>% 
@@ -434,7 +265,7 @@ admissions_april <- admissions_april %>%
 
 
 
-# Admissions vs discharges
+# Comparing admissions to discharges
 
 combined_april <- admissions_april %>% 
   ungroup() %>% 
@@ -467,13 +298,19 @@ combined_april <- admissions_april %>%
   ggsave("graphs/sprint_3/discharges_over_admissions.png", ., width = 6, height = 4)
 
 
-# Data until end of April excluding deaths -------------------------------------------------
+#### Admissions & discharges until end of April excluding deaths  -------------------------------------------------
 
 # summary of the number of admissions and discharges in England by day
 # file created and released from the secure server by RW on 5.6.2020
 discharges_april_excldeaths <- read_xlsx("data/sprint_3/2020_06_22/01a Hospital Admission and Discharge to Care Homes Exc Deaths - Summary - Jan to Apr.xlsx",
                               sheet = "Disch 1420 All Exclusions") 
 
+admissions_april_excldeaths <- read_xlsx("data/sprint_3/2020_06_22/01a Hospital Admission and Discharge to Care Homes Exc Deaths - Summary - Jan to Apr.xlsx",
+                                         sheet = "Adm 1420 All Exclusions") 
+
+# Clean & derive ----
+
+## Discharges
 discharges_april_excldeaths <- discharges_april_excldeaths %>%
   pivot_longer(c(-dischday, -dischmnth), names_to = "type", values_to = "value") %>% 
   separate(type, into = c("type", "year"), sep = "_") %>% 
@@ -502,11 +339,7 @@ discharges_april_excldeaths <- discharges_april_excldeaths %>%
          percent_2015_to_2019 = round(100*sevendayavg / ref_2015_to_2019, 1)) 
 
 
-# summary of the number of admissions and discharges in England by day
-# file created and released from the secure server by RW on 5.6.2020
-admissions_april_excldeaths <- read_xlsx("data/sprint_3/2020_06_22/01a Hospital Admission and Discharge to Care Homes Exc Deaths - Summary - Jan to Apr.xlsx",
-                              sheet = "Adm 1420 All Exclusions") 
-
+## Admissions
 admissions_april_excldeaths <- admissions_april_excldeaths %>%
   pivot_longer(c(-admday, -admmnth), names_to = "type", values_to = "value") %>% 
   separate(type, into = c("type", "year"), sep = "_") %>% 
@@ -538,7 +371,8 @@ admissions_april_excldeaths <- admissions_april_excldeaths %>%
          percent_2015_to_2019 = round(100*sevendayavg / ref_2015_to_2019, 1)) 
 
 
-# Admissions vs discharges
+# Individual graphs ----
+# Admissions and discharges in a combined graph ----
 
 combined_april_excldeaths <- admissions_april_excldeaths %>% 
   bind_rows(discharges_april_excldeaths) %>%
