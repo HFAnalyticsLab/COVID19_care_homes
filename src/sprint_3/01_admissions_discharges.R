@@ -325,14 +325,14 @@ discharges_april_excldeaths <- discharges_april_excldeaths %>%
   select(-dischmnth, -dischday) %>% 
   separate(type, into = c("type", "sourcedest"), sep = 5)
 
-# percent relative to the average of 2015-2019
+# calculate seven day rolling averages and create dummy day for grouping and plotting
 discharges_april_excldeaths <- discharges_april_excldeaths %>% 
   arrange(date) %>% 
   group_by(sourcedest) %>%
   mutate(sevendayavg = sevendayavg(value),
          day_dummy  = `year<-`(date, 0004)) # Feb 29th only parses when 0004 is used as year
 
-# percent relative to the average of 2015-2019
+# percent relative to the daily average of 2015-2019
 discharges_april_excldeaths <- discharges_april_excldeaths %>%
   group_by(type, sourcedest, day_dummy) %>%
   mutate(ref_2015_to_2019 = mean(sevendayavg[year %in% c(2015:2019)]),
@@ -356,7 +356,7 @@ admissions_april_excldeaths <- admissions_april_excldeaths %>%
   separate(type, into = c("type", "sourcedest"), sep = 3)
 
 
-# percent relative to the average of 2015-2019
+# calculate seven day rolling averages and create dummy day for grouping and plotting
 admissions_april_excldeaths <- admissions_april_excldeaths %>% 
   arrange(date) %>% 
   group_by(sourcedest) %>% 
@@ -364,14 +364,12 @@ admissions_april_excldeaths <- admissions_april_excldeaths %>%
          day_dummy  = `year<-`(date, 0004))
 
 
-# percent relative to the average of 2015-2019
+# percent relative to the daily average of 2015-2019
 admissions_april_excldeaths <- admissions_april_excldeaths %>%
   group_by(type, sourcedest, day_dummy) %>%
   mutate(ref_2015_to_2019 = mean(sevendayavg[year %in% c(2015:2019)]),
          percent_2015_to_2019 = round(100*sevendayavg / ref_2015_to_2019, 1)) 
 
-
-# Individual graphs ----
 # Admissions and discharges in a combined graph ----
 
 combined_april_excldeaths <- admissions_april_excldeaths %>% 
