@@ -150,6 +150,9 @@ region_combined_wide %>%
   arrange(desc(deaths_cum_covid_per_100bed)) %>% 
  write_csv("processed_data/CH_by_region_beds_coviddeaths.csv")
 
+
+round(100*sum(region_combined_wide$deaths_cum_covid)/sum(region_combined_wide$beds), 2)
+
 region_shape <- regions_json_df %>% 
   left_join(region_combined_wide, 
             by = c("id" = "region"))
