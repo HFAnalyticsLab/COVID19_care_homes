@@ -13,6 +13,12 @@ This analysis will address:
 * What are the potential transmission routes for COVID-19, based on how frequently residents attend hospital?
 * WHat is the impact of COVID-19 on secondary care utilisation of care home residents? Are there early signs that care may be deteriorating?
 
+## Outputs
+
+The code from [Sprint 2](src/sprint_2) was used to generate the analysis described in the Health Foundation chart series [Do all care home residents face an equal risk of dying from COVID-19?](https://www.health.org.uk/news-and-comment/charts-and-infographics/do-all-care-home-residents-face-an-equal-risk-covid-19).
+
+[sprint 3 to be added]
+
 ## Data sources
 
 The analysis will be performed over several sprints, starting with historical data and updating the results as new data becomes available. 
@@ -57,17 +63,22 @@ The following R packages (available on CRAN) are needed:
 * [**maptools**](https://cran.r-project.org/web/packages/maptools/index.html) 
 * [**geojsonio**](https://cran.r-project.org/web/packages/geojsonio/index.html) 
 * [**readODS**](https://cran.r-project.org/web/packages/readODS/index.html) (1.6.7)
+* [**readxl**](https://cran.r-project.org/web/packages/readxl/index.html) 
+* [**zoo**](https://cran.r-project.org/web/packages/zoo/index.html) 
 
 ### Getting started
 
-[Sprint 1](src/sprint1_historical) is an analysis of historical CQC data on care homes (care home registrations) and SUS data on care home residents from October 2017:
+
+* functions.R - [to be added]
+
+[Sprint 1](src/sprint_1) is an analysis of historical CQC data on care homes (care home registrations) and SUS data on care home residents from October 2017:
 * 1_load_data.R - reads data files from csv, saves them as Rds files
 * 2_care_homes.R - cleans and analyses care home information
 * 3_comorbidities.R - quantifies co-morbidites of care home residents 
 * 4_residents.R -  cleans and analyses care home resident characteristics
 * 5_visualisation.R - visualises the results scripts of 2-4
 
-[Sprint 2](src/sprint2) is an analysis that 
+[Sprint 2](src/sprint_2) is an analysis of COVID deaths in care homes in relation to the regional distribution of care home beds in England 
 1. combines current CQC data on care homes (care home registrations, April 2020) with ONS data on COVID deaths in care home residents (up to 1 May 2020) to understand how regions in England have been affected and
 2. puts this into context with PHE data on the number of care homes that have reported suspected or confirmed
 COVID-19 outbreaks (up to 14 May 2020)
@@ -78,6 +89,19 @@ COVID-19 outbreaks (up to 14 May 2020)
 * 04_combined_vis.R - combined and visualiseses deaths in care home residents with regional distribution of care homes
 * 05_outbreaks.R - analyses and visualises data on COVID-19 outbreaks in care homes 
 
+[Sprint 3](src/sprint_3) is an analysis hospital admissions from care homes and hopsital discharges to care homes before and during the
+COVID outbreak in March and April 2020:
+
+* 01_clean_CQC.R - cleans pseudonimysed care home characteristics
+* 02_clean_MPI.R - cleaning pseudonimysed master patient index for care home residents and their long-term conditions
+* 03_permresidents_descriptives.R - descriptive analysis of characteristics of permament care home residents
+* 04_permresidents_admissions_discharges.R - analysis of hospital admissions and discharges for permanent care home residents (MPI flag only)
+* 05_allresidents_admissions_discharges_regional.R - analysis of hospital admissions and discharges for all care home residents 
+* 06_allresidents_admissions_admtype_covid.R - as above, but split by care home type and COVID primary diagnosis, or admission type
+* 07_permlresidents_descriptives_dataviz_post-release.R - visualisation of characteristics from script 3
+* 08_allresidents_admissions_discharges_dataviz_post-release.R - visualisation of admissions and discharges from script 5
+
+
 ## References
 * Improvement Analytics Unit briefing. Emergency admissions to hospital from care homes: how often and what for? 2019. http://www.scie-socialcareonline.org.uk/emergency-admissions-to-hospital-from-care-homes-how-often-and-what-for/r/a110f00000THg3xAAD.
 * Quality Watch. Focus on: Hospital admissions from care homes. 2015. https://www.health.org.uk/publications/qualitywatch-focus-on-hospital-admissions-from-care-homes
@@ -87,8 +111,11 @@ COVID-19 outbreaks (up to 14 May 2020)
 ## Authors
 * **Fiona Grimm** - on [Twitter](https://twitter.com/fiona_grimm) or [GitHub](https://github.com/fiona-grimm)
 * **Karen Hodgson** - on [Twitter](https://twitter.com/KarenHodgePodge) or [GitHub](https://github.com/KarenHodgson)
+* **Richard Brine**
 
 The unnesting function is based on the R-bloggers post ["(Much) faster unnesting with data.table"](https://www.r-bloggers.com/much-faster-unnesting-with-data-table/) by Johannes B. Gruber.
+
+The interval join using `data.table::foverlaps()` used in sprint 3 (script 04) is based on a helpful explanation on R bloggers by Adnan Fiaz (["In between a rock and a conditional join"](https://www.r-bloggers.com/in-between-a-rock-and-a-conditional-join/)).
 
 ## License
 This project is licensed under the [MIT License](https://github.com/HFAnalyticsLab/COVID19_care_homes/blob/master/LICENSE).
