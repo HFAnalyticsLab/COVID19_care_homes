@@ -1,5 +1,5 @@
 ####
-# Descriptive analysis of care home residents listed in the MPIs
+# Descriptive analysis of care home residents listed in the MPI
 ####
 
 library(tidyverse)
