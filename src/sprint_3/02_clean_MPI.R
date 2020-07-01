@@ -1,5 +1,5 @@
 ####
-# Cleaning pseudonimysed master patient index for care home residents and long-term conditionss
+# Cleaning pseudonimysed master patient index for care home residents and long-term conditions
 ####
 
 library(tidyverse)

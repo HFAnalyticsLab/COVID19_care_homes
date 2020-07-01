@@ -1,5 +1,5 @@
 ####
-# Care home residents - descriptives
+# Descriptive analysis of characteristics of permament care home residents
 ####
 
 library(tidyverse)

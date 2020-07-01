@@ -39,10 +39,6 @@ chres_apcs <- readRDS(str_c(Rds_data_path, 'chres_apcs_2017-2020.Rds'))
 
 # Match with care home resident characteristics ---------------------------
 
-#chres_apcs <- chres_apcs %>% 
-#  mutate(spellstartdate_floor = floor_date(spellstartdate, "month"),
-#         spellenddate_floor = floor_date(spellenddate, "month"))
-
 # Flagging who was a resident when admitted
 
 chres_apcs <- as.data.table(chres_apcs)
