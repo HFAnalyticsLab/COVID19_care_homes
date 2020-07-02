@@ -52,8 +52,8 @@ As the data used for this analysis is not publically available, the code cannot 
 These scripts were written under R version version 3.6.2 (2019-12-12) -- "Dark and Stormy Night".
 The following R packages (available on CRAN) are needed: 
 
-* [**tidyverse**](https://www.tidyverse.org/)(1.3.0)
-* [**tidylog**](https://cran.r-project.org/web/packages/tidylog/index.html)(0.2.0)
+* [**tidyverse**](https://www.tidyverse.org/) (1.3.0)
+* [**tidylog**](https://cran.r-project.org/web/packages/tidylog/index.html) (0.2.0)
 * [**janitor**](https://cran.r-project.org/web/packages/janitor/index.html)
 * [**lubridate**](https://cran.r-project.org/web/packages/lubridate/vignettes/lubridate.html)
 * [**rlang**](https://cran.r-project.org/web/packages/rlang/index.html) (0.4.0)
@@ -103,7 +103,7 @@ COVID outbreak in March and April 2020:
 
 
 ## References
-* Improvement Analytics Unit briefing. Emergency admissions to hospital from care homes: how often and what for? 2019. http://www.scie-socialcareonline.org.uk/emergency-admissions-to-hospital-from-care-homes-how-often-and-what-for/r/a110f00000THg3xAAD.
+* Improvement Analytics Unit briefing. [Emergency admissions to hospital from care homes: how often and what for?](http://www.scie-socialcareonline.org.uk/emergency-admissions-to-hospital-from-care-homes-how-often-and-what-for/r/a110f00000THg3xAAD) 2019. .
 * Quality Watch. Focus on: Hospital admissions from care homes. 2015. https://www.health.org.uk/publications/qualitywatch-focus-on-hospital-admissions-from-care-homes
 * The Health Foundation COVID-19 chart series, 13 May 2020, [Care homes have seen the biggest increase in deaths since the start of the outbreak](https://www.health.org.uk/news-and-comment/charts-and-infographics/deaths-from-any-cause-in-care-homes-have-increased)
 * The Health Foundation press release, 15 May 2020, [Care home deaths from COVID-19 over 50% higher than previously estimated](https://www.health.org.uk/news-and-comment/news/care-home-deaths-from-covid-19-over-50-per-cent-higher-than-previously-estimated)
@@ -111,7 +111,7 @@ COVID outbreak in March and April 2020:
 ## Authors
 * **Fiona Grimm** - on [Twitter](https://twitter.com/fiona_grimm) or [GitHub](https://github.com/fiona-grimm)
 * **Karen Hodgson** - on [Twitter](https://twitter.com/KarenHodgePodge) or [GitHub](https://github.com/KarenHodgson)
-* **Richard Brine**
+* **Richard Brine** - on [GitHub](https://github.com/richardbrine)
 
 The unnesting function is based on the R-bloggers post ["(Much) faster unnesting with data.table"](https://www.r-bloggers.com/much-faster-unnesting-with-data-table/) by Johannes B. Gruber.
 
