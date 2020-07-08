@@ -9,6 +9,8 @@ library(lubridate)
 library(readxl)
 library(zoo)
 
+source("src/functions.R")
+
 # Plotting ------------------------------------------------------------------
 THF_red <- '#dd0031'
 THF_50pct_light_blue <- '#aad3e5'
@@ -100,7 +102,7 @@ combined_april_excldeaths <- admissions_april_excldeaths %>%
   bind_rows(discharges_april_excldeaths) 
 
 combined_april_excldeaths %>% 
-  filter(day_dummy <= ymd("0004-04-30") & day_dummy >= ymd("0004-02-01") & sourcedest != "all" & year == "2020")
+  filter(day_dummy <= ymd("0004-04-30") & day_dummy >= ymd("0004-02-01") & sourcedest != "all" & year == "2020") %>% 
   ungroup() %>% 
   select(-ref_2015_to_2019, -value, -sevendayavg, -year, -day_dummy) %>% 
   unite("combined_col", type, sourcedest) %>% 
