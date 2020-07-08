@@ -50,7 +50,7 @@ discharges_april_excldeaths <- discharges_april_excldeaths %>%
 # calculate seven day rolling averages and create dummy day for grouping and plotting
 discharges_april_excldeaths <- discharges_april_excldeaths %>% 
   arrange(date) %>% 
-  group_by(sourcedest) %>%
+  group_by(year, sourcedest) %>%
   mutate(sevendayavg = sevendayavg(value),
          day_dummy  = `year<-`(date, 0004)) # Feb 29th only parses when 0004 is used as year
 
@@ -83,7 +83,7 @@ admissions_april_excldeaths <- admissions_april_excldeaths %>%
 # calculate seven day rolling averages and create dummy day for grouping and plotting
 admissions_april_excldeaths <- admissions_april_excldeaths %>% 
   arrange(date) %>% 
-  group_by(sourcedest) %>% 
+  group_by(year, sourcedest) %>% 
    mutate(sevendayavg = sevendayavg(value),
          day_dummy  = `year<-`(date, 0004))
 
@@ -401,15 +401,20 @@ admissions_april_excldeaths %>%
   
 
 
-# Rgional and care home type aggregates -----------------------------------
 
-# Sums betweetn 17 March and 30 April
+# Create weekly aggregates ------------------------------------------------
 
-
-discharges_regional <- read_csv("data/sprint_3/2020_06_22_2/CH_discharges_regional_Mar-April.csv",
-                                col_types = ) 
-
-discharges_regional %>% 
-  group_by(year, dischtype) %>% 
-  summarise(count = sum(count))
-
+# to make aggregates comparable across years I'm counting weeks as seven-day periods from Jan 1st
+combined_april_excldeaths_week <- combined_april_excldeaths %>% 
+    filter(sourcedest != "all") %>% 
+    select(type, sourcedest, year, value, date, day_dummy) %>% 
+    mutate(week = week(date),
+           year = as.numeric(year)) %>% 
+    group_by(type, sourcedest, year, week) %>% 
+    summarise(value = sum(value),
+              week_start_dummy = min(day_dummy)) %>% 
+    group_by(type, sourcedest, week) %>% 
+    mutate(mean_value_2015_to_2019 = mean(value[year %in% c(2015:2019)]),
+           percent_2015_to_2019 = round(100* value / mean_value_2015_to_2019, 1)) 
+  
+write_csv(combined_april_excldeaths_week, "graphs/sprint_3/Admissions_dischargesweekly.csv")
