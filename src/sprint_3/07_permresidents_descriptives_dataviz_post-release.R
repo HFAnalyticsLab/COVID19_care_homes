@@ -9,6 +9,8 @@ library(lubridate)
 library(readxl)
 library(zoo)
 
+source("src/functions.R")
+
 # Plotting ------------------------------------------------------------------
 THF_red <- '#dd0031'
 THF_50pct_light_blue <- '#aad3e5'
