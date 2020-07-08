@@ -96,11 +96,11 @@ admissions_april_excldeaths <- admissions_april_excldeaths %>%
          ref_2019 = mean(sevendayavg[year == 2019]),
          percent_2019 = round(100*sevendayavg / ref_2019, 1)) 
 
-# Admissions and discharges in a combined graph ----
 
 combined_april_excldeaths <- admissions_april_excldeaths %>% 
   bind_rows(discharges_april_excldeaths) 
 
+# Admissions and discharges in a combined graph ----
 combined_april_excldeaths %>% 
   filter(day_dummy <= ymd("0004-04-30") & day_dummy >= ymd("0004-02-01") & sourcedest != "all" & year == "2020") %>% 
   ungroup() %>% 
@@ -344,7 +344,7 @@ combined_april_excldeaths %>%
     ggsave("graphs/sprint_3/Admissions_discharges_ch_pctofall.png", ., width = 7, height = 4, dpi = 600)  
   
   
-# During February, what % of admissions and discharges were from/to care homes?
+# During February, what % of admissions and discharges were from/to care homes? ----
 # and how does the absolute number compare to the 5-year average of 2015-2019
 
 admissions_april_excldeaths %>% 
