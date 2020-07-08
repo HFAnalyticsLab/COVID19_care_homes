@@ -306,6 +306,44 @@ combined_april_excldeaths %>%
     ggsave("graphs/sprint_3/Admissions_discharges_excldeaths_ratio.png", ., width = 9, height = 4, dpi = 600)
   
   
+# Care home admissions and discharges as % of all 
+
+(combined_april_excldeaths %>% 
+      group_by(type, date, day_dummy) %>% 
+      mutate(percent_all = round(100* value / value[sourcedest == "all"], 2)) %>% 
+      arrange(date) %>% 
+      group_by(type, sourcedest) %>%
+      mutate(percent_all_sevendayavg = sevendayavg(percent_all, rounding_digits = 2)) %>% 
+      filter(day_dummy <= ymd("0004-04-30") & day_dummy >= ymd("0004-02-01") & sourcedest == "ch") %>% 
+      ggplot(aes(x = day_dummy, y = percent_all_sevendayavg, color = year, group = year)) +
+      geom_vline(xintercept = ymd("0004-03-17"), color = THF_dark_grey, linetype = "dashed", alpha = 0.3) +
+      geom_line() +
+      geom_point(size = 0.5) +
+      theme_bw() +
+      facet_wrap(vars(type), scales = "free", 
+                 labeller = as_labeller(c("adm" = "Admissions",
+                                          "disch" = "Discharges"))) +
+      scale_x_date(date_labels = "%b", date_breaks = "1 month") +
+      ylab("Percent of total") +
+      theme(axis.title.x = element_blank(),
+            legend.position = "right",
+            legend.justification = c(1,0),
+            axis.text = element_text(colour = THF_dark_grey),
+            axis.title = element_text(colour = THF_dark_grey),
+            axis.ticks = element_line(colour = THF_light_grey),
+            panel.grid = element_blank(),
+            panel.grid.major.y = element_line(colour = THF_50pct_light_grey),
+            panel.grid.minor.y = element_line(colour = THF_50pct_light_grey),
+            legend.text = element_text(colour = THF_dark_grey),
+            legend.title = element_blank(),
+            plot.title = element_text(colour = "#005078"),
+            plot.subtitle = element_text(colour = "#005078"),
+            strip.text = element_text(colour = "#524c48"),
+            strip.background = element_blank()) +
+      labs(title = "Percentage of admissions/discharges to care homes")) %>% 
+    ggsave("graphs/sprint_3/Admissions_discharges_ch_pctofall.png", ., width = 7, height = 4, dpi = 600)  
+  
+  
 # During February, what % of admissions and discharges were from/to care homes?
 # and how does the absolute number compare to the 5-year average of 2015-2019
 
