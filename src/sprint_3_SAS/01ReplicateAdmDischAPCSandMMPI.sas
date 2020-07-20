@@ -1,0 +1,122 @@
+/*
+SAS code for creating a data set of APC spells that can be used to try to replicate the NHSE care home discharge figures.
+*/
+
+*	Define the libnames used in the programs;
+libname mmpi		"C01b - mmpi cleaning\lib\clean"; * Source of the cleaned MMPI SAS data sets;
+libname cleansus	"C01 - SUS cleaning\lib\clean"; * Source of the cleaned SUS SAS data sets;
+libname	interim		"P059\interim"; * Destination library of any interim files that need to be created and saved;
+
+options obs = max;
+*options obs = 10000; * Limit the number of records to read in if testing;
+
+*	Set the source of APCS records {apcssource] the date from which to subset the spells within APCS [spellstartend] and a file extension [periodext] used when saving.
+	NB: If the full APCS has already been subsetted, the subset could be resubsetted to save processing time;
+
+***	All records from August 2014 onwards when the MMPI begins for some patients;
+
+%let apcssource = cleansus.apcs;
+%let spellstartend = '01aug14'd;
+%let periodext = 1420;
+
+*** Months 1 to 4 for 2019-20 for direct comparison;
+/*
+%let apcssource = interim.apcs_1420;
+%let spellstartend = '01jan19'd;
+%let periodext = 1920;
+*/
+
+*	Subset the APCS records, selecting only the ke variables needed;
+
+data interim.apcs_&periodext;
+	set &apcssource(keep = spellid pid pidclass lsoa11pidpcd gppraccode ccgpidpcd fyn tnractmnth spellstartdate spellenddate admmthd admsource admincat
+					dischdate dischmthd dischdest provcode provcode3 tnrprovsitecode primdiag elective elod emergency maternity birth transfer otheradm 
+					avoidable bedsore emacuprimcare emchrprimcare emchracs emucsc uidfirstepi uidlastepi age
+					where = (spellstartdate >= &spellstartend or spellenddate >= &spellstartend));
+run;
+
+*	Create a subset of the MMPI that only contains records for patients in the subsetted APCS;
+
+proc sql;
+	create table interim.mmpi_apcs_&periodext as
+	select *
+	from mmpi.mmpi
+	where pid in
+		(select pid
+		from interim.apcs_&periodext);
+quit;
+
+*	Join relevant data from the subsetted MMPI on to the subsetted APCS records based on the datefrom and dateto periods that the spellstart and spellend dates 
+	fall within. The subsetted period APCS records are being used for the left part of the join because not all patient IDs appear in the the MMPI records, either at all 
+	or for all dates. A double left join is being done to select key MMPI variables based on both admission and discharge dates;
+
+proc sql;
+	create table interim.apcs_2_&periodext as
+	select 	r1.datefrom as dfadm, r1.dateto as dtadm, r1.tnrchid as chidadm, r1.uid as uidadm, l.pid, l.spellstartdate, l.spellenddate, 
+			r2.datefrom as dfdisch, r2.dateto as dtdisch, r2.tnrchid as chiddisch, r2.uid as uiddisch, 
+			l.* 
+	from interim.apcs_&periodext as l
+	left join interim.mmpi_apcs_&periodext as r1 on l.pid = r1.pid and l.spellstartdate >= r1.datefrom and (l.spellstartdate <= r1.dateto or r1.dateto = .)
+	left join interim.mmpi_apcs_&periodext as r2 on l.pid = r2.pid and l.spellenddate >= r2.datefrom and (l.spellenddate <= r2.dateto or r2.dateto = .);
+quit;
+
+options obs = max;
+*options obs = 1000000;
+
+*	Update the APCS subsetted data, defining whether an admission or discharge is from / to a care home based on what is known about NHSE methodology;
+
+data interim.apcs_3_&periodext;
+	chdisch = 0; * To record if a record is a care home discharge;
+	chadm = 0; * To record if a record is a care home admission;
+	set interim.apcs_2_&periodext;
+	length admday admmnth admyr dischday dischmnth dischyr 8; * Additional variables useful for linking and aggregating by month and day, split by year;
+	admday = day(spellstartdate);
+	admmnth = month(spellstartdate);
+	admyr = year(spellstartdate);
+	dischday = day(spellenddate);
+	dischmnth = month(spellenddate);
+	dischyr = year(spellenddate);
+
+	*	Set care home admissions based on admission source as defined by NHSE methodolgy;
+	if admsource in:(54, 65, 69, 85, 86, 29, 88) then do; 
+		chadm = 1; * Codes provided and checked;
+	end;
+	*	If there is at least one care home ID in MMPI on admission set record as a care home admission;
+	if chidadm ~= '' then chadm = 1;
+
+	*	Set care home discharges based on discharge destination as defined by NHSE methodolgy;
+	if dischdest in:(54, 65, 69, 85, 86, 29, 88) then do; * Note: Codes 69 and 86 only seem to be in admsource;
+		chdisch = 1;
+	end;
+	*	If there is at least one care home ID in MMPI on discharge set record as a care home discharge;
+	if chiddisch ~= '' then chdisch = 1;
+
+	*	Exclude private patients;
+	if admincat = 2 then do;
+		chdisch = 0; chadm = 0;
+	end;
+
+	*	Exclude other types of discharge; * THIS NEEDS TO BE AGREED;
+	if dischdest in:(30, 37, 38, 48, 49, 50, 51, 52, 53, 66, 79, 84, 87, 98) then chdisch = 0;
+
+run;
+
+/*	LIST OF FURTHER EXCLUSIONS:
+
+	30		Repatriation from HSPH
+	37		Penal court
+	38		Penal police station
+	48		HSPH Scotland
+	49		NHS OP high security psychiatric
+	50		NHS OP medium secure unit
+	51		NHS OP ward gen patients YPD
+	52		NHS OP ward for maternity
+	53		NHS OP ward mentally ill
+	66		LA foster care
+	79		NA patient died or still birth
+	84		Non-NHS hospital med sec unit
+	87		Non-NHS hospital
+	98		NA unfinished spell
+
+*/
+
