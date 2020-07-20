@@ -1,5 +1,5 @@
 ####
-# Hospital admissions / discharges of care home residents with MPI flag (permanent residents only)
+# Hospital admissions / discharges of care home residents with MPI flag
 ####
 
 
@@ -10,9 +10,9 @@ library(lubridate)
 library(zoo)
 library(data.table)
 
-#library(fasttime)
-
 source("file_paths.R")
+source("functions.R")
+
 
 # Import data -------------------------------------------------------------
 # 2017 - now
@@ -38,6 +38,10 @@ chres_apcs <- readRDS(str_c(Rds_data_path, 'chres_apcs_2017-2020.Rds'))
 
 
 # Match with care home resident characteristics ---------------------------
+
+#chres_apcs <- chres_apcs %>% 
+#  mutate(spellstartdate_floor = floor_date(spellstartdate, "month"),
+#         spellenddate_floor = floor_date(spellenddate, "month"))
 
 # Flagging who was a resident when admitted
 
@@ -81,13 +85,14 @@ chres_apcs <-  chres_apcs %>%
 
 
 saveRDS(chres_apcs, str_c(Rds_data_path, 'chres_apcs_2017-2020_mmpiss_matched.Rds'))
+chres_apcs <- readRDS(str_c(Rds_data_path, 'chres_apcs_2017-2020_mmpiss_matched.Rds'))
 
 
 #Counting admissions -----------------------------------------------------
 
 
 chr_admissions <- chres_apcs %>% 
-  filter(chr_at_spellstart == 1) %>% 
+  filter(chr_at_spellstart == 1 & admincat != 2) %>% 
   group_by(spellstartdate) %>% 
   summarise(adm_all = n(),
             adm_elective = sum(elective == 1),
@@ -116,7 +121,7 @@ write_csv(chr_admissions, "../results_sprint3/Chr_admissions.csv")
 
 
 chr_admissions_nursing <- chres_apcs %>% 
-  filter(chr_at_spellstart == 1) %>% 
+  filter(chr_at_spellstart == 1 & admincat != 2) %>% 
   group_by(spellstartdate, ch_nursing_spellstart) %>% 
   summarise(adm_all = n(),
             adm_elective = sum(elective == 1),
@@ -150,7 +155,8 @@ write_csv(chr_admissions_nursing, "../results_sprint3/Chr_admissions_chnursing.c
 # Counting discharges -----------------------------------------------------
 
 chr_discharges <- chres_apcs %>% 
-  filter(chr_at_spellend == 1 & dischdest != 79 & dischmthd != 4) %>% 
+  filter(chr_at_spellend == 1 & !is.element(dischdest, c(79, 98, 51, 52, 53, 30, 37, 38, 48, 49, 50, 66, 84, 87)) 
+         & admincat != 2) %>% 
   group_by(spellenddate) %>% 
   summarise(disch = n()) %>% 
   mutate(disch_7dayavg = sevendayavg(disch),
@@ -175,7 +181,7 @@ write_csv(chr_discharges, "../results_sprint3/Chr_discharges.csv")
 
 
 chr_discharges_nursing <- chres_apcs %>% 
-  filter(chr_at_spellend == 1 & dischdest != 79 & dischmthd != 4) %>% 
+  filter(chr_at_spellend == 1 & !is.element(dischdest, c(79, 98, 51, 52, 53, 30, 37, 38, 48, 49, 50, 66, 84, 87)) & dischmthd != 4) %>% 
   group_by(spellenddate, ch_nursing_spellend) %>% 
   summarise(disch = n()) %>% 
   group_by(ch_nursing_spellend) %>% 
@@ -205,11 +211,11 @@ write_csv(chr_discharges_nursing, "../results_sprint3/Chr_discharges_chnursing.c
 
 # Admissions vs discharges ------------------------------------------------
 
-combined <- chr_admissions_nursing %>% 
+combined_nursing <- chr_admissions_nursing %>% 
   left_join(chr_discharges_nursing, by = c("spellstartdate" = "spellenddate", "ch_nursing_spellstart" =
                                              "ch_nursing_spellend"))
 
-(combined %>% 
+(combined_nursing %>% 
   select(spellstartdate, ch_nursing_spellstart, adm_all_7dayavg, disch_7dayavg) %>% 
   filter(!is.na(ch_nursing_spellstart)) %>% 
   pivot_longer(c(-spellstartdate, -ch_nursing_spellstart), names_to = "type", values_to = "value") %>% 
@@ -232,5 +238,26 @@ combined <- chr_admissions_nursing %>%
   ylab("all hospital discharges (7-day rolling average)") +
   labs(title = "Hospital discharges", subtitle = "Care home residents flagged in the MPI")) %>% 
   ggsave("../results_sprint3/Chr_admissions_discharges_chnursing.png",., device = "png", width = 10)
-           
-  
+         
+
+
+
+combined <- chr_admissions %>% 
+  left_join(chr_discharges, by = c("spellstartdate" = "spellenddate"))
+
+(combined %>% 
+    select(spellstartdate, adm_all_7dayavg, disch_7dayavg) %>% 
+    mutate(year = year(spellstartdate),
+           day_dummy = `year<-`(spellstartdate, 0001)) %>% 
+    ggplot(aes(x = day_dummy, y = disch_7dayavg/adm_all_7dayavg, group = factor(year),
+               color = factor(year))) +
+    scale_x_date(date_labels = "%b", date_breaks = "1 month") +
+    geom_line() +
+    geom_point(size = 1) +
+    theme_bw() +
+    theme(panel.grid.minor.x = element_line(),
+          axis.title.x =  element_blank())+
+    ylab("discharges/admissions (7-day rolling averages)") +
+    labs(title = "Discharges/admissions ratio", subtitle = "Care home residents flagged in the MPI")) %>% 
+  ggsave("../results_sprint3/Chr_discharges_to_admissions_ratio.png",., device = "png", width = 10)
+
