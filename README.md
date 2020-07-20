@@ -90,11 +90,12 @@ The following R packages (available on CRAN) are needed:
 
 
 #### Sprint 2
-[Sprint 2](src/sprint_2) is an analysis of COVID deaths in care homes in relation to the regional distribution of care home beds in England 
+Analysis of COVID deaths in care homes in relation to the regional distribution of care home beds in England, which:
 1. combines current CQC data on care homes (care home registrations, April 2020) with ONS data on COVID deaths in care home residents (up to 1 May 2020) to understand how regions in England have been affected and
 2. puts this into context with PHE data on the number of care homes that have reported suspected or confirmed
 COVID-19 outbreaks (up to 14 May 2020)
 
+[Code](src/sprint_2): 
 * 01_ONS_COVID_deaths.R - analyses data on all-cause and COVID-related deaths in care homes in England and produces maps
 * 02_care_homes.R - cleans and analyses care home information
 * 03_care_homes_visualisation.R  - visualises the results from script 2
@@ -103,9 +104,9 @@ COVID-19 outbreaks (up to 14 May 2020)
 
 
 #### Sprint 3
-Sprint 3 is an analysis hospital admissions from care homes and hopsital discharges to care homes before and during the COVID outbreak in March and April 2020.
+Analysis of hospital admissions from care homes and hopsital discharges to care homes before and during the COVID outbreak in March and April 2020.
 
-[R code](src/sprint_3) was used to clean CQC and MPI data, to analyse characteristics and admissions/discharges of *permanent* care home residents and to visualise results using the SAS code below. 
+[R code](src/sprint_3) used to clean CQC and MPI data, to analyse characteristics and admissions/discharges of *permanent* care home residents and to visualise results using the SAS code below. 
 
 * 01_clean_CQC.R - cleans pseudonimysed care home characteristics
 * 02_clean_MPI.R - cleaning pseudonimysed master patient index for care home residents and their long-term conditions
@@ -116,7 +117,7 @@ Sprint 3 is an analysis hospital admissions from care homes and hopsital dischar
 * 07_permlresidents_descriptives_dataviz_post-release.R - visualisation of characteristics from script 3
 * 08_allresidents_admissions_discharges_dataviz_post-release.R - visualisation of admissions and discharges from script 5
 
-Additional [SAS code](src/sprint_3_SAS) was used to count the number of hospital admissions from care homes and hospital discharges to care homes (based on both MPI care home flags and SUS source of admission and discharge destination), and to flag long-term conditions based on inpatient diagnosis codes of the previous 3 years. 
+[SAS code](src/sprint_3_SAS) used to count the number of hospital admissions from care homes and hospital discharges to care homes (based on both MPI care home flags and SUS source of admission and discharge destination), and to flag long-term conditions based on inpatient diagnosis codes of the previous 3 years. 
 
 * 01ReplicateAdmDischAPCSandMMPI.sas - flags hospital admissions from care homes and hospital discharges to care homes 
 * 02SummariseReplicationData.sas - creates summaries
@@ -128,7 +129,6 @@ Additional [SAS code](src/sprint_3_SAS) was used to count the number of hospital
 * 10DailyCounts_v2_admrgn.sas - count admissions and discharges by region
 * 11CareHomeAdmAggregates.sas - count admissions with primary diagnosis COVID
 * 11aCareHomeAdmAgg1420.sas - count elective and emergency admissions
-
 
 
 ## References
