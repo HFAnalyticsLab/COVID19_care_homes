@@ -23,15 +23,24 @@ The code from [Sprint 2](src/sprint_2) was used to generate the analysis describ
 
 The analysis will be performed over several sprints, starting with historical data and updating the results as new data becomes available. 
 
-### Person-level data
-We are using pseudonymised data on care home characteristics from the Care Quality Commission (similar to the publicly available [care directory on the CQC website](https://www.cqc.org.uk/files/cqc-care-directory-filters-1-april-2020)), linked to pseudonymised patient records from [Secondary Uses Service](https://digital.nhs.uk/services/secondary-uses-service-sus)a national administrative database of all inpatient admissions, A&E attendances and outpatient appointments funded by the NHS in England. Access to this data has been granted as the analysis is carried out under instruction from NHS England.
-
-Data used for this analysis were anonymised in line with the ICO's Anonymisation Code of Practice. The data will be accessed in The Health Foundation's Secure Data Environment; a secure data analysis facility (accredited with the ISO27001 information security standard, and recognised for the NHS Digital Data Security and Protection Toolkit). No information that could directly identify a patient or other individual will be used.
-
 ### Open data
 We are also using publicly available data on 
 * [Deaths involving COVID-19 in the care sector, England and Wales](https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/articles/deathsinvolvingcovid19inthecaresectorenglandandwales/deathsoccurringupto1may2020andregisteredupto9may2020provisional) published by the ONS
 * [The number of COVID-19 outbreaks in care homes](https://www.gov.uk/government/statistical-data-sets/covid-19-number-of-outbreaks-in-care-homes-management-information) published by PHE
+
+
+### Person-level data
+We are using pseudonymised data on care home characteristics from the Care Quality Commission (similar to the publicly available [care directory on the CQC website](https://www.cqc.org.uk/files/cqc-care-directory-filters-1-april-2020)), linked to longituginal information on care home residents (Master Patient Index, MPI) and to hospital records from [Secondary Uses Service](https://digital.nhs.uk/services/secondary-uses-service-sus), a national administrative database of all inpatient admissions, A&E attendances and outpatient appointments funded by the NHS in England. Access to this data has been granted as the analysis is carried out under instruction from NHS England.
+
+Using address information from monthly MPI extracts, care home residents can be
+identified by assigning Unique Property Reference Numbers (UPRN) to patient addresses
+and to addresses of care homes registered with the Care Quality Commission (CQC) and
+comparing them.All processing of address information, and subsequent linkage of patient
+information, was carried out by the National Commissioning Data Repository (NCDR)
+and the analysis of the linked dataset used ‘pseudonymised’ information in a secure
+environment hosted by the Health Foundation. 
+
+Data used for this analysis were anonymised in line with the ICO's Anonymisation Code of Practice. The data will be accessed in The Health Foundation's Secure Data Environment; a secure data analysis facility (accredited with the ISO27001 information security standard, and recognised for the NHS Digital Data Security and Protection Toolkit). No information that could directly identify a patient or other individual will be used.
 
 
 ### Reference data
@@ -66,11 +75,12 @@ The following R packages (available on CRAN) are needed:
 * [**readxl**](https://cran.r-project.org/web/packages/readxl/index.html) 
 * [**zoo**](https://cran.r-project.org/web/packages/zoo/index.html) 
 
-### Getting started
+### Analysis code
 
+#### Utility
+* [functions.R](src/functions.R) - functions used across sprints
 
-* functions.R - [to be added]
-
+#### Sprint 1
 [Sprint 1](src/sprint_1) is an analysis of historical CQC data on care homes (care home registrations) and SUS data on care home residents from October 2017:
 * 1_load_data.R - reads data files from csv, saves them as Rds files
 * 2_care_homes.R - cleans and analyses care home information
@@ -78,6 +88,8 @@ The following R packages (available on CRAN) are needed:
 * 4_residents.R -  cleans and analyses care home resident characteristics
 * 5_visualisation.R - visualises the results scripts of 2-4
 
+
+#### Sprint 2
 [Sprint 2](src/sprint_2) is an analysis of COVID deaths in care homes in relation to the regional distribution of care home beds in England 
 1. combines current CQC data on care homes (care home registrations, April 2020) with ONS data on COVID deaths in care home residents (up to 1 May 2020) to understand how regions in England have been affected and
 2. puts this into context with PHE data on the number of care homes that have reported suspected or confirmed
@@ -89,8 +101,11 @@ COVID-19 outbreaks (up to 14 May 2020)
 * 04_combined_vis.R - combined and visualiseses deaths in care home residents with regional distribution of care homes
 * 05_outbreaks.R - analyses and visualises data on COVID-19 outbreaks in care homes 
 
-[Sprint 3](src/sprint_3) is an analysis hospital admissions from care homes and hopsital discharges to care homes before and during the
-COVID outbreak in March and April 2020:
+
+#### Sprint 3
+Sprint 3 is an analysis hospital admissions from care homes and hopsital discharges to care homes before and during the COVID outbreak in March and April 2020.
+
+[R code](src/sprint_3) was used to clean CQC and MPI data, to analyse characteristics and admissions/discharges of *permanent* care home residents and to visualise results using the SAS code below. 
 
 * 01_clean_CQC.R - cleans pseudonimysed care home characteristics
 * 02_clean_MPI.R - cleaning pseudonimysed master patient index for care home residents and their long-term conditions
@@ -100,6 +115,20 @@ COVID outbreak in March and April 2020:
 * 06_allresidents_admissions_admtype_covid.R - as above, but split by care home type and COVID primary diagnosis, or admission type
 * 07_permlresidents_descriptives_dataviz_post-release.R - visualisation of characteristics from script 3
 * 08_allresidents_admissions_discharges_dataviz_post-release.R - visualisation of admissions and discharges from script 5
+
+Additional [SAS code](src/sprint_3_SAS) was used to count the number of hospital admissions from care homes and hospital discharges to care homes (based on both MPI care home flags and SUS source of admission and discharge destination), and to flag long-term conditions based on inpatient diagnosis codes of the previous 3 years. 
+
+* 01ReplicateAdmDischAPCSandMMPI.sas - flags hospital admissions from care homes and hospital discharges to care homes 
+* 02SummariseReplicationData.sas - creates summaries
+* 03SubsetSUS.sas 
+* 04AddNewMorb.sas, 05CreateRunfileSpine.sas, 06CreateMorbCounts.sas, 07AddMorbCountsToSpine.sas - flag and count long-term conditions, create flags for COVID and flu/pneunomia
+* 08ExportFlatfile.sas
+* 09AddCHChars.sas - join care home characteristics
+* 10DailyCounts_v1.sas - create daily counts of admissions and discharges
+* 10DailyCounts_v2_admrgn.sas - count admissions and discharges by region
+* 11CareHomeAdmAggregates.sas - count admissions with primary diagnosis COVID
+* 11aCareHomeAdmAgg1420.sas - count elective and emergency admissions
+
 
 
 ## References
