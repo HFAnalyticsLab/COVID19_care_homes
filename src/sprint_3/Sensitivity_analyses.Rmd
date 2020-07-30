@@ -1,0 +1,288 @@
+---
+title: Sensivity analyses 
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE)
+
+library(kableExtra)
+```
+
+### 1. Analysis presented in the briefing
+
+
+```{r, include=FALSE}
+
+
+library(tidyverse)
+library(tidylog)
+library(janitor)
+library(lubridate)
+library(readxl)
+library(zoo)
+
+source(here::here("src", "functions.R"))
+
+# Plotting ------------------------------------------------------------------
+THF_red <- '#dd0031'
+THF_50pct_light_blue <- '#aad3e5'
+THF_1_purple <- '#744284'
+THF_dark_grey <-  '#524c48'
+THF_light_grey <- '#e2dfd8'
+THF_50pct_light_grey <- '#EEEDE8'
+
+#### Admissions & discharges until end of April excluding deaths  -------------------------------------------------
+
+# summary of the number of admissions and discharges in England by day
+# discharges exclude deaths
+# file created and released from the secure server by RW on 5.6.2020
+discharges_april_excldeaths <- read_xlsx(here::here("data", "sprint_3", "2020_06_22", "01a Hospital Admission and Discharge to Care Homes Exc Deaths - Summary - Jan to Apr.xlsx"),
+                              sheet = "Disch 1420 All Exclusions") 
+
+admissions_april_excldeaths <- read_xlsx(here::here("data", "sprint_3", "2020_06_22", "01a Hospital Admission and Discharge to Care Homes Exc Deaths - Summary - Jan to Apr.xlsx"),
+                                         sheet = "Adm 1420 All Exclusions") 
+
+# Clean & derive ----
+
+## Discharges
+discharges_april_excldeaths <- discharges_april_excldeaths %>%
+  pivot_longer(c(-dischday, -dischmnth), names_to = "type", values_to = "value") %>% 
+  separate(type, into = c("type", "year"), sep = "_") %>% 
+  group_by(type) %>% 
+  filter(!is.na(value)) %>% 
+  mutate(date = ymd(str_c(year, 
+                          str_pad(dischmnth, 2, side = "left", pad = "0"), 
+                          str_pad(dischday, 2, side = "left", pad = "0")))) %>% 
+  filter(date > ymd("2014-08-01"))
+
+discharges_april_excldeaths <- discharges_april_excldeaths %>%
+  select(-dischmnth, -dischday) %>% 
+  separate(type, into = c("type", "sourcedest"), sep = 5)
+
+# calculate seven day rolling averages and create dummy day for grouping and plotting
+discharges_april_excldeaths <- discharges_april_excldeaths %>% 
+  arrange(date) %>% 
+  group_by(year, sourcedest) %>%
+  mutate(sevendayavg = sevendayavg(value),
+         day_dummy  = `year<-`(date, 0004)) # Feb 29th only parses when 0004 is used as year
+
+# percent relative to the daily average of 2015-2019
+discharges_april_excldeaths <- discharges_april_excldeaths %>%
+  group_by(type, sourcedest, day_dummy) %>%
+  mutate(ref_2015_to_2019 = mean(sevendayavg[year %in% c(2015:2019)]),
+         percent_2015_to_2019 = round(100*sevendayavg / ref_2015_to_2019, 1),
+         ref_2019 = mean(sevendayavg[year == 2019]),
+         percent_2019 = round(100*sevendayavg / ref_2019, 1)) 
+
+
+## Admissions
+admissions_april_excldeaths <- admissions_april_excldeaths %>%
+  pivot_longer(c(-admday, -admmnth), names_to = "type", values_to = "value") %>% 
+  separate(type, into = c("type", "year"), sep = "_") %>% 
+  group_by(type) %>% 
+  filter(!is.na(value)) %>% 
+  mutate(date = ymd(str_c(year, 
+                          str_pad(admmnth, 2, side = "left", pad = "0"), 
+                          str_pad(admday, 2, side = "left", pad = "0")))) %>% 
+  filter(date > ymd("2014-08-01"))
+
+
+admissions_april_excldeaths <- admissions_april_excldeaths %>%
+  select(-admmnth, -admday) %>% 
+  separate(type, into = c("type", "sourcedest"), sep = 3)
+
+
+# calculate seven day rolling averages and create dummy day for grouping and plotting
+admissions_april_excldeaths <- admissions_april_excldeaths %>% 
+  arrange(date) %>% 
+  group_by(year, sourcedest) %>% 
+   mutate(sevendayavg = sevendayavg(value),
+         day_dummy  = `year<-`(date, 0004))
+
+
+# percent relative to the daily average of 2015-2019
+admissions_april_excldeaths <- admissions_april_excldeaths %>%
+  group_by(type, sourcedest, day_dummy) %>%
+  mutate(ref_2015_to_2019 = mean(sevendayavg[year %in% c(2015:2019)]),
+         percent_2015_to_2019 = round(100*sevendayavg / ref_2015_to_2019, 1),
+         ref_2019 = mean(sevendayavg[year == 2019]),
+         percent_2019 = round(100*sevendayavg / ref_2019, 1)) 
+
+
+combined_april_excldeaths <- admissions_april_excldeaths %>% 
+  bind_rows(discharges_april_excldeaths) 
+
+combined_april_excldeaths <- combined_april_excldeaths %>% 
+  mutate(type = case_when(type == "adm" ~ "Admissions",
+                          type == "disch" ~ "Discharges"),
+         sourcedest = case_when(sourcedest == "ch" ~ "Care home",
+                                sourcedest == "other" ~ "Other",
+                                sourcedest == "all" ~ "All"))
+```
+
+The figures below shows seven-day moving averages of daily admissions and discharges in 2020, indexed relative to the average for the same period across 2015-2019.
+
+Please note that hospital admissions usually decrease in the time period around the Easter weekend.
+
+
+```{r, echo=FALSE, message=FALSE, fig.width = 6, fig.height = 3.5}
+
+combined_april_excldeaths  %>% 
+    filter(day_dummy <= ymd("0004-04-30") & day_dummy >= ymd("0004-02-01") & sourcedest != "All" & year == "2020") %>% 
+    ggplot(aes(x = day_dummy, y = percent_2015_to_2019, color = sourcedest, group = sourcedest)) +
+    geom_vline(xintercept = ymd("0004-03-17"), color = THF_dark_grey, linetype = "dashed", alpha = 0.3) +
+    annotate("rect", xmin = ymd("0004-04-10"), xmax = ymd("0004-04-13"), 
+             ymin = -Inf, ymax = Inf, fill = THF_dark_grey, alpha = 0.3) +
+    
+    geom_line() +
+    geom_point(size = 0.5) +
+    theme_bw() +
+    facet_grid(.~type, scale = "free_y") +
+    ylab("Percent") +
+    scale_x_date(date_labels = "%b", date_breaks = "1 month") +
+    scale_color_manual(values = c(THF_red, THF_50pct_light_blue), labels = c("from/to care home", "other source/destination")) +
+    
+    scale_y_continuous(breaks = seq(40, 100, by = 20)) +
+    theme(axis.title.x = element_blank(),
+          legend.position = "top",
+          legend.justification = c(1,0),
+          axis.text = element_text(colour = THF_dark_grey),
+          axis.title = element_text(colour = THF_dark_grey),
+          axis.ticks = element_line(colour = THF_light_grey),
+          panel.grid = element_blank(),
+          panel.grid.major.y = element_line(colour = THF_50pct_light_grey),
+          legend.text = element_text(colour = THF_dark_grey),
+          legend.title = element_blank(),
+          strip.text = element_text(colour = "#524c48"),
+          strip.background = element_blank()) +
+    annotate("text", x = ymd("0004-03-18"), y = 118, 
+             label = "17 March,\nNHS discharge\nguidance", color = THF_dark_grey, size = 2, hjust = 0) +
+    annotate("text", x = ymd("0004-04-14"), y = 120, 
+             label = "10-13 April,\nEaster 2020", color = THF_dark_grey, size = 2, hjust = 0) +
+    labs(color = "Source/destination")
+
+```
+
+### 2. Sensitivity analysis: excluding long hospital spells
+
+Our original analysis may underestimate the number of hospital admissions towards the end of April. This is because data for patients who are still in the hospital by the end of the reporting period might not be included.
+
+This analysis of hospital admissions from care homes and hospital discharges to care homes includes only hospital spells with a **length of stay of less than 45 days**. The rationale for this analysis is to test whether excluding spells for patients who were still in hospital at the end of the reporting period has an effect on the pattern of admissions and discharges.
+
+
+```{r, include=FALSE}
+
+source(here::here("src", "sprint_3", "09_sensitivity_LOS45_post-release.R"))
+
+combined_los <- combined_los %>% 
+  mutate(type = case_when(type == "adm" ~ "Admissions",
+                          type == "disch" ~ "Discharges"),
+         sourcedest = case_when(sourcedest == "ch" ~ "Care home",
+                                sourcedest == "other" ~ "Other",
+                                sourcedest == "all" ~ "All"))
+```
+
+
+```{r, echo=FALSE, message=FALSE, fig.width = 6, fig.height = 3.5}
+
+combined_los  %>% 
+    filter(day_dummy <= ymd("0004-04-30") & day_dummy >= ymd("0004-02-01") & sourcedest != "All" & year == "2020") %>% 
+    ggplot(aes(x = day_dummy, y = percent_2015_to_2019, color = sourcedest, group = sourcedest)) +
+    geom_vline(xintercept = ymd("0004-03-17"), color = THF_dark_grey, linetype = "dashed", alpha = 0.3) +
+    annotate("rect", xmin = ymd("0004-04-10"), xmax = ymd("0004-04-13"), 
+             ymin = -Inf, ymax = Inf, fill = THF_dark_grey, alpha = 0.3) +
+    
+    geom_line() +
+    geom_point(size = 0.5) +
+    theme_bw() +
+    facet_grid(.~type, scale = "free_y") +
+    ylab("Percent") +
+    scale_x_date(date_labels = "%b", date_breaks = "1 month") +
+    scale_color_manual(values = c(THF_red, THF_50pct_light_blue), labels = c("from/to care home", "other source/destination")) +
+    
+    scale_y_continuous(breaks = seq(40, 100, by = 20)) +
+    theme(axis.title.x = element_blank(),
+          legend.position = "top",
+          legend.justification = c(1,0),
+          axis.text = element_text(colour = THF_dark_grey),
+          axis.title = element_text(colour = THF_dark_grey),
+          axis.ticks = element_line(colour = THF_light_grey),
+          panel.grid = element_blank(),
+          panel.grid.major.y = element_line(colour = THF_50pct_light_grey),
+          legend.text = element_text(colour = THF_dark_grey),
+          legend.title = element_blank(),
+          strip.text = element_text(colour = "#524c48"),
+          strip.background = element_blank()) +
+    annotate("text", x = ymd("0004-03-18"), y = 118, 
+             label = "17 March,\nNHS discharge\nguidance", color = THF_dark_grey, size = 2, hjust = 0) +
+    annotate("text", x = ymd("0004-04-14"), y = 120, 
+             label = "10-13 April,\nEaster 2020", color = THF_dark_grey, size = 2, hjust = 0) +
+    labs(color = "Source/destination")
+
+```
+
+   
+### 3. Sensitivity analysis: excluding spells for care home residents without an address match
+
+```{r, include=FALSE}
+
+source(here::here("src", "sprint_3", "10_sensitivity_MPI_post-release.R"))
+
+combined_mpi <- combined_mpi %>% 
+  mutate(type = case_when(type == "adm" ~ "Admissions",
+                          type == "disch" ~ "Discharges"),
+         sourcedest = case_when(sourcedest == "ch" ~ "Care home",
+                                sourcedest == "other" ~ "Other",
+                                sourcedest == "all" ~ "All"))
+```
+
+
+Our original analysis uses a broad definition of care home admissions and discharges. It is based on GP-registered patient addresses, which are matched to care home addresses, as well as information recorded in hospital records. 
+
+This analysis of hospital admissions from care homes and hospital discharges to care homes is exclusively based on residents with a GP-registered addresses that matches a care home. This definition was also used in previous IAU publications. The rationale for this analysis is to test whether not taking into account admissions and discharge information in hospital records has an effect on the pattern of admissions and discharges.
+
+```{r, echo=FALSE, message=FALSE, fig.width = 6, fig.height = 3.5}
+
+combined_mpi  %>% 
+    filter(day_dummy <= ymd("0004-04-30") & day_dummy >= ymd("0004-02-01") & sourcedest != "All" & year == "2020") %>% 
+    ggplot(aes(x = day_dummy, y = percent_2015_to_2019, color = sourcedest, group = sourcedest)) +
+    geom_vline(xintercept = ymd("0004-03-17"), color = THF_dark_grey, linetype = "dashed", alpha = 0.3) +
+    annotate("rect", xmin = ymd("0004-04-10"), xmax = ymd("0004-04-13"), 
+             ymin = -Inf, ymax = Inf, fill = THF_dark_grey, alpha = 0.3) +
+    
+    geom_line() +
+    geom_point(size = 0.5) +
+    theme_bw() +
+    facet_grid(.~type, scale = "free_y") +
+    ylab("Percent") +
+    scale_x_date(date_labels = "%b", date_breaks = "1 month") +
+    scale_color_manual(values = c(THF_red, THF_50pct_light_blue), labels = c("from/to care home", "other source/destination")) +
+    
+    scale_y_continuous(breaks = seq(40, 160, by = 20)) +
+    theme(axis.title.x = element_blank(),
+          legend.position = "top",
+          legend.justification = c(1,0),
+          axis.text = element_text(colour = THF_dark_grey),
+          axis.title = element_text(colour = THF_dark_grey),
+          axis.ticks = element_line(colour = THF_light_grey),
+          panel.grid = element_blank(),
+          panel.grid.major.y = element_line(colour = THF_50pct_light_grey),
+          legend.text = element_text(colour = THF_dark_grey),
+          legend.title = element_blank(),
+          strip.text = element_text(colour = "#524c48"),
+          strip.background = element_blank()) +
+    annotate("text", x = ymd("0004-03-18"), y = 148, 
+             label = "17 March,\nNHS discharge\nguidance", color = THF_dark_grey, size = 2, hjust = 0) +
+    annotate("text", x = ymd("0004-04-14"), y = 150, 
+             label = "10-13 April,\nEaster 2020", color = THF_dark_grey, size = 2, hjust = 0) +
+    labs(color = "Source/destination")
+
+```
+
+Note: The number of discharges of to care homes identified via address matching is higher at the start of 2020 compared to previous years. Whether changes in the address matching process might have contributed to this is currently being investigated.
