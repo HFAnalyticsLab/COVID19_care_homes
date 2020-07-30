@@ -17,7 +17,7 @@ This analysis will address:
 
 The code from [Sprint 2](src/sprint_2) was used to generate the analysis described in the Health Foundation chart series [Do all care home residents face an equal risk of dying from COVID-19?](https://www.health.org.uk/news-and-comment/charts-and-infographics/do-all-care-home-residents-face-an-equal-risk-covid-19).
 
-[sprint 3 to be added]
+The analysis from sprint 3 is shown in the Health Foundation briefing [https://www.health.org.uk/publications/report/adult-social-care-and-covid-19-assessing-the-impact-on-social-care-users-and-staff-in-england-so-far](https://www.health.org.uk/publications/report/adult-social-care-and-covid-19-assessing-the-impact-on-social-care-users-and-staff-in-england-so-far).
 
 ## Data sources
 
@@ -116,19 +116,23 @@ Analysis of hospital admissions from care homes and hopsital discharges to care 
 * 06_allresidents_admissions_admtype_covid.R - as above, but split by care home type and COVID primary diagnosis, or admission type
 * 07_permlresidents_descriptives_dataviz_post-release.R - visualisation of characteristics from script 3
 * 08_allresidents_admissions_discharges_dataviz_post-release.R - visualisation of admissions and discharges from script 5
+* 09_sensitivity_LOS45_post-release.R - sensitivity analysis excluding long spells (leght of stay less than 45 days)
+* 10_sensitivity_MPI_post-release.R - sensitivity analysis only including permanent residents with an address match
+* Sensitivity_analyses.Rmd - creating visualisations for sensitivity analyses
 
 [SAS code](src/sprint_3_SAS) used to count the number of hospital admissions from care homes and hospital discharges to care homes (based on both MPI care home flags and SUS source of admission and discharge destination), and to flag long-term conditions based on inpatient diagnosis codes of the previous 3 years. 
 
-* 01ReplicateAdmDischAPCSandMMPI.sas - flags hospital admissions from care homes and hospital discharges to care homes 
-* 02SummariseReplicationData.sas - creates summaries
-* 03SubsetSUS.sas 
-* 04AddNewMorb.sas, 05CreateRunfileSpine.sas, 06CreateMorbCounts.sas, 07AddMorbCountsToSpine.sas - flag and count long-term conditions, create flags for COVID and flu/pneunomia
-* 08ExportFlatfile.sas
-* 09AddCHChars.sas - join care home characteristics
-* 10DailyCounts_v1.sas - create daily counts of admissions and discharges
-* 10DailyCounts_v2_admrgn.sas - count admissions and discharges by region
-* 11CareHomeAdmAggregates.sas - count admissions with primary diagnosis COVID
-* 11aCareHomeAdmAgg1420.sas - count elective and emergency admissions
+* 01_ReplicateNHSMethodology - flags hospital admissions from care homes and hospital discharges to care homes 
+* 01a_ExcludeLOS45plus - generate subset needed for sensitivity analysis on length of stay
+* 02_IdentifyMMPICarehomeResidents - flag care home admissions and discharges based on MPI records
+* 03a_SumAdmissionsByDayMonth_AllSpells - - create summaries for count admission (MPI + SUS flag)
+* 03b_SumDischargesByDayMonth_AllSpells - create summaries for discharges (MPI + SUS flag)
+* 03c_SumAdmissionsByDayMonth_ExcLOS45plus - create summaries for count admission (LOS restricted)
+* 03d_SumDischargesByDayMonth_ExcLOS45plus- create summaries for discharges (LOS restricted)
+* 03e_SumAdmissionsByDayMonth_MPICHRes - create discharge summaries for permament residentes (MPI only)
+* 03f_SumDischargesByDayMonth_MPICHRes - create admissions summaries for permament residentes (MPI only)
+
+[Sensitivity anaylses](src/sprint_3/Sensitivity_analyses.html), excluding long spells or excluding admissinos/discharges where the patient did not have an MPI adress match to a care home. 
 
 
 ## References
