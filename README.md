@@ -17,7 +17,7 @@ This analysis will address:
 
 The code from [Sprint 2](src/sprint_2) was used to generate the analysis described in the Health Foundation chart series [Do all care home residents face an equal risk of dying from COVID-19?](https://www.health.org.uk/news-and-comment/charts-and-infographics/do-all-care-home-residents-face-an-equal-risk-covid-19).
 
-The analysis from sprint 3 is shown in the Health Foundation briefing [Adult social care and COVID-19: Assessing the impact on social care users and staff in England so far](https://www.health.org.uk/publications/report/adult-social-care-and-covid-19-assessing-the-impact-on-social-care-users-and-staff-in-england-so-far).
+The analysis from sprint 3 is shown in the Health Foundation briefing [Adult social care and COVID-19: Assessing the impact on social care users and staff in England so far](https://www.health.org.uk/publications/report/adult-social-care-and-covid-19-assessing-the-impact-on-social-care-users-and-staff-in-england-so-far). Sensitivity analyses can be found on [this site](https://hfanalyticslab.github.io/COVID19_care_homes/Sensitivity_analyses.html). 
 
 ## Data sources
 
@@ -120,7 +120,7 @@ Analysis of hospital admissions from care homes and hopsital discharges to care 
 * 10_sensitivity_MPI_post-release.R - sensitivity analysis only including permanent residents with an address match
 * Sensitivity_analyses.Rmd - creating visualisations for sensitivity analyses
 
-*Sensitivity anaylses*, excluding long spells or excluding admissinos/discharges where the patient did not have an MPI adress match to a care home, can be found in the html file in this folder.
+*Sensitivity anaylses*, excluding long spells or excluding admissinos/discharges where the patient did not have an MPI adress match to a care home, can be found as html file in this folder.
 
 [SAS code](src/sprint_3_SAS) used to count the number of hospital admissions from care homes and hospital discharges to care homes (based on both MPI care home flags and SUS source of admission and discharge destination), and to flag long-term conditions based on inpatient diagnosis codes of the previous 3 years. 
 
@@ -133,9 +133,6 @@ Analysis of hospital admissions from care homes and hopsital discharges to care 
 * 03d_SumDischargesByDayMonth_ExcLOS45plus- create summaries for discharges (LOS restricted)
 * 03e_SumAdmissionsByDayMonth_MPICHRes - create discharge summaries for permament residentes (MPI only)
 * 03f_SumDischargesByDayMonth_MPICHRes - create admissions summaries for permament residentes (MPI only)
-
-
-
 
 ## References
 * Improvement Analytics Unit briefing. [Emergency admissions to hospital from care homes: how often and what for?](http://www.scie-socialcareonline.org.uk/emergency-admissions-to-hospital-from-care-homes-how-often-and-what-for/r/a110f00000THg3xAAD) 2019. .
