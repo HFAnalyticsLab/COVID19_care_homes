@@ -1,0 +1,106 @@
+/*
+SAS code for creating the spells data set that gets the actual care home ID and associated care home characteristics from the combined MPI / Care Home by Month data set and add flags
+to spells where an actual care home ID is present on either admission or discharge.
+*/
+
+*	Define the libnames used in the programs;
+libname mmpi		"filepath"; * Source of the cleaned MMPI SAS data sets;
+libname cleansus	"filepath"; * Source of the cleaned SUS SAS data sets;
+libname	interim		"filepath; * Source / destination library of any interim files that need to be created and saved;
+libname pub			"filepath"; * Source / destination library for data sets that will be used as the basis of published results;
+
+***	Get care home characteristics information for patients indicated in the MMPI as living in a care home either on admission or at discharge;
+
+*	Subset the linked Spells / MMPI data set created in 01_ReplicateNHSMethodology identifying records that have one or more pseudo care home IDs at admission or discharge;
+
+options obs = max;
+*options obs = 200000; * To be used when testing;
+
+data 	interim.chidpres_adm /* Care home ID present on admission */(keep = mpichadm chadm chidadm pid spellid spellstartdate) 
+		interim.chidpres_disch(keep = mpichdisch chdisch chiddisch pid spellid spellenddate); * Create interim data sets for holding care home admissions / discharges in the base spells dataset
+			that have an one or more care home IDs identified from the MPI;
+	mpichadm = 0; mpichdisch = 0; * Create new flags indicating if the admission or discharge is from / to a care home identified in the MPI;
+	set pub.apcs_1420_3;
+	if chidadm ~= '' then do; * If the is a care home ID on admission;
+		mpichadm = 1;
+		output interim.chidpres_adm;
+	end;
+	if chiddisch ~= '' then do; * If there is a care home ID on discharge;
+		mpichdisch = 1;
+		output interim.chidpres_disch;
+	end;
+run;
+
+***	Admissions;
+
+*	Join the subsetted admissions records on to the monthly version of the MMPI to get the actual assigned care home details;
+
+proc sql;
+	create table interim.chidpres_adm_2 as
+	select 	l.spellid, 
+			r.assigned_tnrchid as assigned_chid_adm, r.ch_nursing as ch_nursing_adm, r.ch_residential as ch_residential_adm, r.ch_beds as ch_beds_adm, 
+			r.tnrchid as tnrchid_adm
+	from interim.chidpres_adm as l
+	left join interim.mmpiss_bymonth_chchars_region_im as r on l.pid = r.pid 
+	where l.spellstartdate >= r.datefrom and l.spellstartdate <= r.dateto;
+quit;
+
+*	Because the above code has a where clause, join back onto the base 'care home present on admission' data set;
+
+proc sql;
+	create table interim.chidpres_adm_3 as
+	select l.*, r.*
+	from interim.chidpres_adm as l
+	left join interim.chidpres_adm_2 as r on l.spellid = r.spellid;
+quit;
+
+
+***	Discharges;
+
+*	Join the subsetted discharges records on to the monthly version of the MMPI to get the actual assigned care home details;
+
+proc sql;
+	create table interim.chidpres_disch_2 as
+	select 	l.spellid, 
+			r.assigned_tnrchid as assigned_chid_disch, r.ch_nursing as ch_nursing_disch, r.ch_residential as ch_residential_disch, r.ch_beds as ch_beds_disch, 
+			r.tnrchid as tnrchid_disch
+	from interim.chidpres_disch as l
+	left join interim.mmpiss_bymonth_chchars_region_im as r on l.pid = r.pid 
+	where l.spellenddate >= r.datefrom and l.spellenddate <= r.dateto;
+quit;
+
+proc sql;
+	create table interim.chidpres_disch_3 as
+	select l.*, r.*
+	from interim.chidpres_disch as l
+	left join interim.chidpres_disch_2 as r on l.spellid = r.spellid;
+quit;
+
+*	As the admission and discharge data sets are relatively small, join them together first before joining back on to the main data set;
+
+proc sql;
+	create table interim.chidpres_all as
+	select coalesce (l.spellid, r.spellid) as spellid, l.*, r.*
+	from interim.chidpres_adm_3 as l
+	full join interim.chidpres_disch_3 as r
+	on l.spellid = r.spellid;
+quit;
+
+proc sql;
+	create table interim.apcs_1420_4 as
+	select l.*, r.*
+	from pub.apcs_1420_3 as l
+	left join interim.chidpres_all as r
+	on l.spellid = r.spellid;
+quit;
+
+*	Create new care home discharge and admission flags for only identified care homes;
+
+data pub.apcs_1420_4;
+	chadm_mpi = 0;
+	chdisch_mpi = 0;
+	set interim.apcs_1420_4;
+	if assigned_chid_adm ~= . and chadm = 1 then chadm_mpi = 1; 
+	if assigned_chid_disch ~= . and chdisch = 1 then chdisch_mpi = 1;
+run;
+

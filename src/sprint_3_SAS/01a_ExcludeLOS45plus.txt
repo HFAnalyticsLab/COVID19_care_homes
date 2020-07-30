@@ -1,0 +1,18 @@
+/*
+SAS code for excluding spells of 45 days or more from the data set of spells used to replicate the NHSE care home discharge figures.
+*/
+
+libname pub	"filepath"; * Source / destination library for data sets that will be used as the basis of published results;
+
+options obs = max;
+*options obs = 10000; * To be used when testing;
+
+data pub.apcs_1420_3a pub.excllosp; * Create 2 data sets - one for holding spells of 0 to 44 days, the other for holding the excluded spells;
+	length losp 8; * Create a variable for holding the length of spell value;
+	losp = 0; * Set the length of spell value to 0;
+	set pub.apcs_1420_3; * The full data set created in 01_ReplicateNHSMethodology;
+	losp = spellenddate - spellstartdate; * Length of spell calculation;
+	if losp >= 0 and losp < 45 then output pub.apcs_1420_3a; *If the spell length is 0 to 44 days then keep the spell;
+	else output pub.excllosp; 
+run;
+

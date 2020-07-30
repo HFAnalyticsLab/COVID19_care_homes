@@ -1,0 +1,288 @@
+/*
+SAS code for summarising the daily discharges to care homes based on the data set of spells with identified care home ID created in 02_IdentifyMMPICarehomeResidents.sas
+*/
+
+libname	interim		"filepath; * Source / destination library of any interim files that need to be created and saved;
+libname pub			"filepath"; * Source / destination library for data sets that will be used as the basis of published results;
+
+/*################
+  ##  DISCHARGE ##
+  ################*/
+
+options obs = max;
+*options obs = 10000; Only use for testing;
+	
+
+%let mysource = pub.apcs_1420_4; * Create a macro variable for the source data set;
+%let myext = allspells; * Create a macro variable for the naming of interim / published data sets;
+
+*	Summarise the data by spellenddate, the care home identified in MPI discharge flag, discharge day, month and year excluding any records where the discharge destination = died.
+	NOTE: a different flag is being used for the summary, but is renamed in the code below so as not to have to change the rest of the code;
+
+proc sql;
+	create table pub.dischbytime_&myext as
+	select spellenddate, chdisch_mpi as chdisch, count(spellenddate) as freq, dischday, dischmnth, dischyr
+	from &mysource
+	where dischdest ~= 79
+	group by spellenddate, chdisch_mpi, dischday, dischmnth, dischyr
+	order by dischyr, dischmnth, dischday;
+quit;
+
+*	Check totals;
+
+proc sql;
+	create table dbyt_totals as
+	select sum(freq) as total
+	from pub.dischbytime_&myext;
+quit;
+
+*	Separate out the data by year and by care home discharge (1 or 0). dc_ is care home discharge, do_ is other discharge;
+
+data 	dc_2014 dc_2015 dc_2016 dc_2017 dc_2018 dc_2019 dc_2020 dc_other
+		do_2014 do_2015 do_2016 do_2017 do_2018 do_2019 do_2020 do_other;
+	set pub.dischbytime_&myext;
+	if dischyr = 2014 then do;
+		if chdisch = 1 then output dc_2014;
+		else output do_2014;
+	end;
+	else if dischyr = 2015 then do;
+		if chdisch = 1 then output dc_2015;
+		else output do_2015;
+	end;
+	else if dischyr = 2016 then do;
+		if chdisch = 1 then output dc_2016;
+		else output do_2016;
+	end;
+	else if dischyr = 2017 then do;
+		if chdisch = 1 then output dc_2017;
+		else output do_2017;
+	end;
+	else if dischyr = 2018 then do;
+		if chdisch = 1 then output dc_2018;
+		else output do_2018;
+	end;
+	else if dischyr = 2019 then do;
+		if chdisch = 1 then output dc_2019;
+		else output do_2019;
+	end;
+	else if dischyr = 2020 then do;
+		if chdisch = 1 then output dc_2020;
+		else output do_2020;
+	end;
+	else if chdisch = 1 then output dc_other;
+	else output do_other;
+run;
+
+*	Check the individual totals. The following code is purely to check the numbers add up;
+
+%let myds = dc_2014;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = do_2014;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = dc_2015;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = do_2015;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = dc_2016;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = do_2016;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = dc_2017;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = do_2017;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = dc_2018;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = do_2018;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = dc_2019;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = do_2019;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = dc_2020;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = do_2020;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = dc_other;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+%let myds = do_other;
+
+proc sql;
+	create table total_&myds as
+	select "&myds" as dataset format $char16., sum(freq) as total
+	from &myds;
+quit;
+
+*	Combine all the individual totals;
+
+data all_total_checks;
+	set total_dc_2014 total_dc_2015 total_dc_2016 total_dc_2017 total_dc_2018 total_dc_2019 total_dc_2020 total_dc_other
+		total_do_2014 total_do_2015 total_do_2016 total_do_2017 total_do_2018 total_do_2019 total_do_2020 total_do_other;
+run;
+
+proc sql;
+	create table all_total_checks_total as
+	select sum(total) as total
+	from all_total_checks;
+quit;
+
+
+*	Summarise all the data by day and month so that all the years can be seen side by side;
+
+proc sql;
+	create table allyears as
+	select	l.dischmnth, l.dischday, 	
+			r1.freq as dischch_2014, r2.freq as dischother_2014, 
+			r3.freq as dischch_2015, r4.freq as dischother_2015, 
+			r5.freq as dischch_2016, r6.freq as dischother_2016, 
+			r7.freq as dischch_2017, r8.freq as dischother_2017, 
+			r9.freq as dischch_2018, r10.freq as dischother_2018, 
+			r11.freq as dischch_2019, r12.freq as dischother_2019, 
+			r13.freq as dischch_2020, r14.freq as dischother_2020 
+	from interim.joinyrmnth as l
+	left join dc_2014 as r1 on l.dischday = r1.dischday and l.dischmnth = r1.dischmnth 
+	left join do_2014 as r2 on l.dischday = r2.dischday and l.dischmnth = r2.dischmnth  
+	left join dc_2015 as r3 on l.dischday = r3.dischday and l.dischmnth = r3.dischmnth 
+	left join do_2015 as r4 on l.dischday = r4.dischday and l.dischmnth = r4.dischmnth  
+	left join dc_2016 as r5 on l.dischday = r5.dischday and l.dischmnth = r5.dischmnth  
+	left join do_2016 as r6 on l.dischday = r6.dischday and l.dischmnth = r6.dischmnth 
+	left join dc_2017 as r7 on l.dischday = r7.dischday and l.dischmnth = r7.dischmnth
+	left join do_2017 as r8 on l.dischday = r8.dischday and l.dischmnth = r8.dischmnth 
+	left join dc_2018 as r9 on l.dischday = r9.dischday and l.dischmnth = r9.dischmnth 
+	left join do_2018 as r10 on l.dischday = r10.dischday and l.dischmnth = r10.dischmnth 
+	left join dc_2019 as r11 on l.dischday = r11.dischday and l.dischmnth = r11.dischmnth 
+	left join do_2019 as r12 on l.dischday = r12.dischday and l.dischmnth = r12.dischmnth 
+	left join dc_2020 as r13 on l.dischday = r13.dischday and l.dischmnth = r13.dischmnth 
+	left join do_2020 as r14 on l.dischday = r14.dischday and l.dischmnth = r14.dischmnth 
+	order by l.dischmnth, l.dischday;
+quit;
+
+*	Create additional summary variables counting all discharges;
+
+data allyears2;
+	length dischmnth dischday 8;
+	length 	dischch_2014 dischother_2014 dischall_2014 dischch_2015	dischother_2015	dischall_2015
+			dischch_2016 dischother_2016 dischall_2016 dischch_2017	dischother_2017	dischall_2017
+			dischch_2018 dischother_2018 dischall_2018 dischch_2019	dischother_2019	dischall_2019
+			dischch_2020 dischother_2020 dischall_2020 8;
+	set allyears;
+	dischall_2014 = sum(dischch_2014, dischother_2014); 
+	dischall_2015 = sum(dischch_2015, dischother_2015); 
+	dischall_2016 = sum(dischch_2016, dischother_2016); 
+	dischall_2017 = sum(dischch_2017, dischother_2017); 
+	dischall_2018 = sum(dischch_2018, dischother_2018); 
+	dischall_2019 = sum(dischch_2019, dischother_2019); 
+	dischall_2020 = sum(dischch_2020, dischother_2020); 
+run;
+	
+*	Summaries by year and month;
+
+proc sql;
+	create table ay2_sum as
+	select dischmnth, 
+			sum(dischch_2014) as chd_14, sum(dischother_2014) as other_14, sum(dischall_2014) as all_14, 
+			sum(dischch_2015) as chd_15, sum(dischother_2015) as other_15, sum(dischall_2015) as all_15, 
+			sum(dischch_2016) as chd_16, sum(dischother_2016) as other_16, sum(dischall_2016) as all_16, 
+			sum(dischch_2017) as chd_17, sum(dischother_2017) as other_17, sum(dischall_2017) as all_17, 
+			sum(dischch_2018) as chd_18, sum(dischother_2018) as other_18, sum(dischall_2018) as all_18, 
+			sum(dischch_2019) as chd_19, sum(dischother_2019) as other_19, sum(dischall_2019) as all_19, 
+			sum(dischch_2020) as chd_20, sum(dischother_2020) as other_20, sum(dischall_2020) as all_20
+	from allyears2
+	group by dischmnth;
+quit;
+
+*	Save the final summary data set;
+
+data pub.disch_allyrs_&myext;
+	set allyears2;
+run;

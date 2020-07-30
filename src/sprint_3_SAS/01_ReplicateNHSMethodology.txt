@@ -3,47 +3,42 @@ SAS code for creating a data set of APC spells that can be used to try to replic
 */
 
 *	Define the libnames used in the programs;
-libname mmpi		"C01b - mmpi cleaning\lib\clean"; * Source of the cleaned MMPI SAS data sets;
-libname cleansus	"C01 - SUS cleaning\lib\clean"; * Source of the cleaned SUS SAS data sets;
-libname	interim		"P059\interim"; * Destination library of any interim files that need to be created and saved;
+libname mmpi		"filepath"; * Source of the cleaned MMPI SAS data sets;
+libname cleansus	"filepath"; * Source of the cleaned SUS SAS data sets;
+libname	interim		"filepath"; * Destination library of any interim files that need to be created and saved;
+libname pub		"filepath"; * Destination library for data sets that will be used as the basis of published results;
+
 
 options obs = max;
-*options obs = 10000; * Limit the number of records to read in if testing;
+*options obs = 1000000; * Limit the number of records to read in if testing;
 
 *	Set the source of APCS records {apcssource] the date from which to subset the spells within APCS [spellstartend] and a file extension [periodext] used when saving.
 	NB: If the full APCS has already been subsetted, the subset could be resubsetted to save processing time;
 
 ***	All records from August 2014 onwards when the MMPI begins for some patients;
 
-%let apcssource = cleansus.apcs;
+*%let apcssource = cleansus.apcs;
+%let apcssource = interim.apcs_1420_o;
 %let spellstartend = '01aug14'd;
-%let periodext = 1420;
-
-*** Months 1 to 4 for 2019-20 for direct comparison;
-/*
-%let apcssource = interim.apcs_1420;
-%let spellstartend = '01jan19'd;
-%let periodext = 1920;
-*/
 
 *	Subset the APCS records, selecting only the ke variables needed;
 
-data interim.apcs_&periodext;
+data interim.apcs_1420_1;
 	set &apcssource(keep = spellid pid pidclass lsoa11pidpcd gppraccode ccgpidpcd fyn tnractmnth spellstartdate spellenddate admmthd admsource admincat
-					dischdate dischmthd dischdest provcode provcode3 tnrprovsitecode primdiag elective elod emergency maternity birth transfer otheradm 
-					avoidable bedsore emacuprimcare emchrprimcare emchracs emucsc uidfirstepi uidlastepi age
+					dischdate dischmthd dischdest provcode provcode3 tnrprovsitecode primdiag elective emergency maternity birth transfer otheradm 
+					uidfirstepi uidlastepi age
 					where = (spellstartdate >= &spellstartend or spellenddate >= &spellstartend));
 run;
 
 *	Create a subset of the MMPI that only contains records for patients in the subsetted APCS;
 
 proc sql;
-	create table interim.mmpi_apcs_&periodext as
+	create table interim.mmpi_apcs_1420_1 as
 	select *
 	from mmpi.mmpi
 	where pid in
 		(select pid
-		from interim.apcs_&periodext);
+		from interim.apcs_1420_1);
 quit;
 
 *	Join relevant data from the subsetted MMPI on to the subsetted APCS records based on the datefrom and dateto periods that the spellstart and spellend dates 
@@ -51,13 +46,13 @@ quit;
 	or for all dates. A double left join is being done to select key MMPI variables based on both admission and discharge dates;
 
 proc sql;
-	create table interim.apcs_2_&periodext as
+	create table interim.apcs_1420_2 as
 	select 	r1.datefrom as dfadm, r1.dateto as dtadm, r1.tnrchid as chidadm, r1.uid as uidadm, l.pid, l.spellstartdate, l.spellenddate, 
 			r2.datefrom as dfdisch, r2.dateto as dtdisch, r2.tnrchid as chiddisch, r2.uid as uiddisch, 
 			l.* 
-	from interim.apcs_&periodext as l
-	left join interim.mmpi_apcs_&periodext as r1 on l.pid = r1.pid and l.spellstartdate >= r1.datefrom and (l.spellstartdate <= r1.dateto or r1.dateto = .)
-	left join interim.mmpi_apcs_&periodext as r2 on l.pid = r2.pid and l.spellenddate >= r2.datefrom and (l.spellenddate <= r2.dateto or r2.dateto = .);
+	from interim.apcs_1420_1 as l
+	left join interim.mmpi_apcs_1420_1 as r1 on l.pid = r1.pid and l.spellstartdate >= r1.datefrom and (l.spellstartdate <= r1.dateto or r1.dateto = .)
+	left join interim.mmpi_apcs_1420_1 as r2 on l.pid = r2.pid and l.spellenddate >= r2.datefrom and (l.spellenddate <= r2.dateto or r2.dateto = .);
 quit;
 
 options obs = max;
@@ -65,10 +60,10 @@ options obs = max;
 
 *	Update the APCS subsetted data, defining whether an admission or discharge is from / to a care home based on what is known about NHSE methodology;
 
-data interim.apcs_3_&periodext;
+data pub.apcs_1420_3;
 	chdisch = 0; * To record if a record is a care home discharge;
 	chadm = 0; * To record if a record is a care home admission;
-	set interim.apcs_2_&periodext;
+	set interim.apcs_1420_2;
 	length admday admmnth admyr dischday dischmnth dischyr 8; * Additional variables useful for linking and aggregating by month and day, split by year;
 	admday = day(spellstartdate);
 	admmnth = month(spellstartdate);
