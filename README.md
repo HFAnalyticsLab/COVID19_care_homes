@@ -4,20 +4,22 @@
 
 ## Project Description
 
-This analysis describes the care home landscape in England and the healthcare needs and vulnerability to COVID-19 of people permanently living in care homes. Relative to the start of the COVID-19 outbreak in England and Wales, [care homes have seen the biggest increase in deaths over time compared to deaths that have occurred in other settings](https://www.health.org.uk/news-and-comment/charts-and-infographics/deaths-from-any-cause-in-care-homes-have-increased-by-99-per-cent). Deaths in care homes from all causes have increased by 99% since the start of the outbreak.
-The aim of this project is to inform medium-term decision making during the COVID-19 pandemic. 
+This project started in May 2020 and originally focused on describing the care home landscape in England and the healthcare needs and vulnerability to COVID-19 of people permanently living in care homes. 
 
-This analysis will address:
-* What is the overall risk of the care home population to COVID-19?
-* In which areas are homes at particularly high risk?
-* What are the potential transmission routes for COVID-19, based on how frequently residents attend hospital?
-* WHat is the impact of COVID-19 on secondary care utilisation of care home residents? Are there early signs that care may be deteriorating?
+Relative to the start of the COVID-19 outbreak in England and Wales, [care homes saw the biggest increase in deaths over time compared to deaths that have occurred in other settings during the](https://www.health.org.uk/news-and-comment/charts-and-infographics/deaths-from-any-cause-in-care-homes-have-increased-by-99-per-cent). Deaths in care homes from all causes have increased by 99% since the start of the outbreak.
 
-## Outputs
+The aim of this project is to produce analysis to inform medium-term decision making during the COVID-19 pandemic. 
 
-The code from [Sprint 2](src/sprint_2) was used to generate the analysis described in the Health Foundation chart series [Do all care home residents face an equal risk of dying from COVID-19?](https://www.health.org.uk/news-and-comment/charts-and-infographics/do-all-care-home-residents-face-an-equal-risk-covid-19).
+## Project phases and outputs
 
-The analysis from sprint 3 is shown in the Health Foundation briefing [Adult social care and COVID-19: Assessing the impact on social care users and staff in England so far](https://www.health.org.uk/publications/report/adult-social-care-and-covid-19-assessing-the-impact-on-social-care-users-and-staff-in-england-so-far). Sensitivity analyses can be found on [this site](https://hfanalyticslab.github.io/COVID19_care_homes/Sensitivity_analyses.html). 
+1. Sprint 1 included feasibility studies and initial exploration of CQC data on care homes (care home registrations) and SUS data on care home residents from October 2017.
+
+2. Analysis of COVID deaths in care homes in relation to the regional distribution of care home beds in England (May 2020). The code from [Sprint 2](src/sprint_2) was used to generate the analysis described in the Health Foundation chart series "[Do all care home residents face an equal risk of dying from COVID-19?](https://www.health.org.uk/news-and-comment/charts-and-infographics/do-all-care-home-residents-face-an-equal-risk-covid-19)" (published 22 May 2020).
+
+3. Analysis of hospital admissions from care homes and hopsital discharges to care homes before and during the COVID outbreak in March and April 2020.
+The analysis from sprint 3 featured in the Health Foundation briefing [Adult social care and COVID-19: Assessing the impact on social care users and staff in England so far](https://www.health.org.uk/publications/report/adult-social-care-and-covid-19-assessing-the-impact-on-social-care-users-and-staff-in-england-so-far) (published July 2020). Sensitivity analyses can be found on [this site](https://hfanalyticslab.github.io/COVID19_care_homes/Sensitivity_analyses.html). 
+
+4. Comprehensive analysis of elective and emergency admissions from residential and nursing homes between January and June 2020. The findings from sprint 4 will be published in an upcoming pre-print. 
 
 ## Data sources
 
@@ -74,6 +76,8 @@ The following R packages (available on CRAN) are needed:
 * [**readODS**](https://cran.r-project.org/web/packages/readODS/index.html) (1.6.7)
 * [**readxl**](https://cran.r-project.org/web/packages/readxl/index.html) 
 * [**zoo**](https://cran.r-project.org/web/packages/zoo/index.html) 
+* [**ggrepel**](https://cran.r-project.org/web/packages/ggrepel/index.html)
+* [**RColorBrewer**](https://cran.r-project.org/web/packages/RColorBrewer/index.html)
 
 ### Analysis code
 
@@ -133,6 +137,20 @@ Analysis of hospital admissions from care homes and hopsital discharges to care 
 * 03d_SumDischargesByDayMonth_ExcLOS45plus- create summaries for discharges (LOS restricted)
 * 03e_SumAdmissionsByDayMonth_MPICHRes - create discharge summaries for permament residentes (MPI only)
 * 03f_SumDischargesByDayMonth_MPICHRes - create admissions summaries for permament residentes (MPI only)
+
+#### Sprint 4
+
+[R code](src/sprint_4) used to clean CQC and MPI data, to analyse characteristics and trends in hopsital admission rates of two cohorts of *permanent* care home residents (January 2019 and 2020) and to investigate admissions reasons. 
+
+* 01_clean_CQC.R - cleans pseudonimysed care home characteristics
+* 02_clean_MPI.R - cleaning pseudonimysed master patient index for care home residents and their long-term conditions
+* 03_define_cohorts.R - define cohorts and follow up period, descriptive analysis of characteristics of permament care home residents
+* 04_process_admissions.R - clean and filter hospital spells for the study cohorts, descriptive analysis of admitted patients
+* 04a_procedures.R - count number of admissions with cataract procedures
+* 05_define_denominators.R - count number of days spent in care home during the follow up period
+* 07_admission_rates_weekly.R - calculate and visualise weekly admission rates
+* 08_admission_rates_March-May.R - calculate admission rates for the period between 1 March and 31 May
+* 09_admission_causes.R - calculate changes in primary reasons for admissions 
 
 ## References
 * Improvement Analytics Unit briefing. [Emergency admissions to hospital from care homes: how often and what for?](http://www.scie-socialcareonline.org.uk/emergency-admissions-to-hospital-from-care-homes-how-often-and-what-for/r/a110f00000THg3xAAD) 2019. .
