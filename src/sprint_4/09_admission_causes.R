@@ -118,7 +118,7 @@ write_csv(summary_avoidable_count_wide, str_c(results_path_sprint4, "adm_causes/
 condition_order <- summary_avoidable_count_wide$avoidable_cause[summary_avoidable_count_wide$ch_nursing == 0]
 condition_order <- condition_order[order(summary_avoidable_count_wide$Year_2019[summary_avoidable_count_wide$ch_nursing == 0])] %>% 
   str_to_sentence() %>% gsub(" ", "\n", .)  %>% gsub("lrti", "LRTI", .) %>% gsub("Uti", "Urinary tract\ninfections",.) %>% 
-  gsub("Food\nand\n", "Food and ",.)
+  gsub("Food\nand\n", "Food and ",.) %>% gsub("Pneunomia", "Pneumonia", .)
 
 summary_avoidable_plot <- summary_avoidable %>% 
   mutate(chnursing_year = if_else(ch_nursing == 0, 
@@ -128,6 +128,7 @@ summary_avoidable_plot <- summary_avoidable %>%
          avoidable_cause = str_to_sentence(avoidable_cause),
          avoidable_cause = gsub(" ", "\n", avoidable_cause),
          avoidable_cause = gsub("lrti", "LRTI", avoidable_cause),
+         avoidable_cause = gsub("Pneunomia", "Pneumonia", avoidable_cause),
          avoidable_cause = gsub("Uti", "Urinary tract\ninfections", avoidable_cause),
          avoidable_cause = gsub("Food\nand\n", "Food and ", avoidable_cause),
          avoidable_cause = factor(avoidable_cause, levels = condition_order))
@@ -140,6 +141,7 @@ summary_avoidable_count_wide_plot <- summary_avoidable_count_wide %>%
          avoidable_cause = str_to_sentence(avoidable_cause),
          avoidable_cause = gsub(" ", "\n", avoidable_cause),
          avoidable_cause = gsub("lrti", "LRTI", avoidable_cause),
+         avoidable_cause = gsub("Pneunomia", "Pneumonia", avoidable_cause),
          avoidable_cause = gsub("Uti", "Urinary tract\ninfections", avoidable_cause),
          avoidable_cause = gsub("Food\nand\n", "Food and ", avoidable_cause),
          combined = str_c(sprintf("%+d", change), " (", sprintf("%+d", pctchange), ")"),
