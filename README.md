@@ -12,14 +12,14 @@ The aim of this project is to produce analysis to inform medium-term decision ma
 
 ## Project phases and outputs
 
-1. Sprint 1 included feasibility studies and initial exploration of CQC data on care homes (care home registrations) and SUS data on care home residents from October 2017.
+**1.** Sprint 1 included feasibility studies and initial exploration of CQC data on care homes (care home registrations) and SUS data on care home residents from October 2017.
 
-2. Analysis of COVID deaths in care homes in relation to the regional distribution of care home beds in England (May 2020). The code from [Sprint 2](src/sprint_2) was used to generate the analysis described in the Health Foundation chart series "[Do all care home residents face an equal risk of dying from COVID-19?](https://www.health.org.uk/news-and-comment/charts-and-infographics/do-all-care-home-residents-face-an-equal-risk-covid-19)" (published 22 May 2020).
+**2.** Analysis of COVID deaths in care homes in relation to the regional distribution of care home beds in England (May 2020). The code from [Sprint 2](src/sprint_2) was used to generate the analysis described in the Health Foundation chart series "[Do all care home residents face an equal risk of dying from COVID-19?](https://www.health.org.uk/news-and-comment/charts-and-infographics/do-all-care-home-residents-face-an-equal-risk-covid-19)" (published 22 May 2020).
 
-3. Analysis of hospital admissions from care homes and hopsital discharges to care homes before and during the COVID outbreak in March and April 2020.
+**3** Analysis of hospital admissions from care homes and hopsital discharges to care homes before and during the COVID outbreak in March and April 2020.
 The analysis from sprint 3 featured in the Health Foundation briefing [Adult social care and COVID-19: Assessing the impact on social care users and staff in England so far](https://www.health.org.uk/publications/report/adult-social-care-and-covid-19-assessing-the-impact-on-social-care-users-and-staff-in-england-so-far) (published July 2020). Sensitivity analyses can be found on [this site](https://hfanalyticslab.github.io/COVID19_care_homes/Sensitivity_analyses.html). 
 
-4. Comprehensive analysis of elective and emergency admissions from residential and nursing homes between January and June 2020. The findings from sprint 4 will be published in an upcoming pre-print. 
+**4.** Comprehensive analysis of elective and emergency admissions from residential and nursing homes between January and June 2020. The findings from sprint 4 will be published as an pre-print and submitted to a peer-reviewed journal. 
 
 ## Data sources
 
