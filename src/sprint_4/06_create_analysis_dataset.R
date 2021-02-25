@@ -105,9 +105,8 @@ chres_apcs_tot <- chres_apcs %>%
             emergency_covid_prim = sum(emergency_covid == 1),
             emelod_covid_notprim = sum(emelod_covid_notprim == 1),
             emergency_noncovid = sum(emergency_noncovid == 1),
-            emergency_stroke = sum(emergency == 1 & detect_codes(primdiag, "I6[1|3|4].*")),
-            emergency_accorosyndr = sum(emergency == 1 & detect_codes(primdiag, c("I200", "I21[0|1|2|3|4|9]", 
-                                                                "I22[0|1|2|8|9]", "I24[8|9]")))) %>% 
+            emergency_stroke = sum(emergency_stroke == 1 ),
+            emergency_accorosyndr = sum(emergency_accorosyndr == 1)) %>% 
   
   mutate_at(vars(matches("emergency_|covid_")), replace_na, 0)
 

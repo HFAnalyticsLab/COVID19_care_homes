@@ -138,7 +138,11 @@ chres_apcs <- chres_apcs %>%
   mutate(elective_not_elod = if_else(elective == 1 & elod == 0, 1, 0),
          emergency_noncovid = if_else(emergency == 1 & covid_prim == 0, 1, 0),
          emergency_covid = if_else(emergency == 1 & covid_prim == 1, 1, 0),
-         emelod_covid_notprim = if_else(covid_notprim == 1 & (elod == 1 | emergency == 1), 1, 0))
+         emelod_covid_notprim = if_else(covid_notprim == 1 & (elod == 1 | emergency == 1), 1, 0),
+         emergency_stroke = if_else(emergency == 1 & detect_codes(primdiag, "I6[1|3|4].*"), 1, 0),
+         emergency_accorosyndr = if_else(emergency == 1 & detect_codes(primdiag, c("I200", "I21[0|1|2|3|4|9]", 
+                                                                               "I22[0|1|2|8|9]", "I24[8|9]")), 1, 0))
+
 
 saveRDS(chres_apcs,  str_c(Rds_data_path, 'sprint_4/apcs_chr_cohorts.Rds'))
 
