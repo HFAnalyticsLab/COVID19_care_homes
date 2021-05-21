@@ -19,7 +19,7 @@ The aim of this project is to produce analysis to inform medium-term decision ma
 **3** Analysis of hospital admissions from care homes and hopsital discharges to care homes before and during the COVID outbreak in March and April 2020.
 The analysis from sprint 3 featured in the Health Foundation briefing [Adult social care and COVID-19: Assessing the impact on social care users and staff in England so far](https://www.health.org.uk/publications/report/adult-social-care-and-covid-19-assessing-the-impact-on-social-care-users-and-staff-in-england-so-far) (published July 2020). Sensitivity analyses can be found on [this site](https://hfanalyticslab.github.io/COVID19_care_homes/Sensitivity_analyses.html). 
 
-**4.** Comprehensive analysis of elective and emergency admissions from residential and nursing homes between January and June 2020. The findings from sprint 4 will be published as an pre-print and submitted to a peer-reviewed journal. 
+**4.** Comprehensive analysis of elective and emergency admissions from residential and nursing homes between January and June 2020. The findings from sprint 4 were published as an [pre-print](https://www.preprints.org/manuscript/202102.0593/v1) and have been submitted to a peer-reviewed journal. 
 
 ## Data sources
 
