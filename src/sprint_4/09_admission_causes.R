@@ -182,16 +182,156 @@ summary_avoidable_count_wide_plot <- summary_avoidable_count_wide %>%
   ggsave("M:/COVID-19/COVID19_care_homes/graphs/sprint_4/Avoidable_causes_long.png", ., 
          device = "png", dpi = 600, height = 9, width = 7)
 
-
 # Summary: Covid admissions -----------------------------------------------
 
-summary_covid <- chres_apcs %>%  
-  group_by(ch_nursing, year, covid_prim) %>% 
+# % covid admissions relative to all emergencies or electives (ordinary or day case)
+summary_covid <- chres_apcs %>%
+  filter(emergency == 1 | elod == 1) %>% 
+  group_by(ch_nursing, year, emergency_covid) %>% 
   count() %>%
   group_by(ch_nursing, year) %>% 
   mutate(pct = round(100 * n / sum(n), 1))
 
 write_csv(summary_covid, str_c(results_path_sprint4, "adm_causes/Covid_admissions.csv"))
+
+# Covid admissions - other diagnosis codes --------------------------------
+
+chres_apcs_covid_ids <- chres_apcs %>%
+  filter(emergency == 1 | elod == 1) %>%  
+  filter(emergency_covid == 1) %>% 
+  distinct(spellid, ch_nursing, year)
+
+apce_diag <- fread(str_c(raw_data_path, "care home paper/apcs_2019_20_diag_codes.csv"))
+
+apce_diag_covid_adm <- apce_diag %>% 
+  filter(spellid %in% chres_apcs_covid_ids$spellid)
+
+apce_diag_covid_adm <- apce_diag_covid_adm %>%   
+  filter(dc != "U071" & dc != "U072" & !is.na(dc) & dc != "") 
+
+
+apce_diag_covid_adm <-  apce_diag_covid_adm %>% 
+  left_join(chres_apcs_covid_ids)
+
+# diagnosis for all spells that *have* additional diagnoses
+apce_diag_covid_adm <-  apce_diag_covid_adm %>% 
+  distinct()
+
+# Number of additional diagnosis codes for COVID admissions
+# per spell
+# IMPORTANT: join back onto IDs of all COVID admissions, otherwise
+# we lose admissions with 0 additional diagnosis codes
+apce_diag_covid_adm %>% 
+  group_by(ch_nursing, spellid) %>% 
+  count(name = "diag_count") %>% 
+  right_join(chres_apcs_covid_ids[, c("spellid")]) %>% 
+  mutate(diag_count = replace_na(diag_count, 0)) %>% 
+  group_by(ch_nursing) %>% 
+  count(diag_count, name = "adm_count") %>% 
+  ggplot(aes(x = diag_count, y= adm_count)) +
+  geom_bar(stat = "identity") +
+  facet_wrap("ch_nursing") +
+  xlim(0,100)
+
+adm_diag_count_summary <- apce_diag_covid_adm %>% 
+  group_by(ch_nursing, spellid) %>% 
+  count(name = "diag_count") %>% 
+  right_join(chres_apcs_covid_ids[, c("spellid", "ch_nursing")]) %>% 
+  mutate(diag_count = replace_na(diag_count, 0)) %>% 
+  mutate(diag_count_cat = cut(diag_count, breaks = c(seq(0, 60, by = 10), Inf),
+                              labels = c(str_c(seq(0, 50, by = 10), "-", 
+                                                 seq(9, 59, by = 10)), "60+"),
+                              right = FALSE)) %>%  
+  group_by(ch_nursing, diag_count_cat) %>% 
+  count(name = "adm_count") %>% 
+  group_by(ch_nursing) %>% 
+  mutate(total_adm =  sum(adm_count),
+         adm_pct = round(100* adm_count/total_adm, 1))
+
+write_csv(adm_diag_count_summary, str_c(results_path_sprint4, "adm_causes/COVID_num_add_diags.csv"))
+
+adm_diag_count_summary %>% 
+  mutate(ch_nursing = if_else(ch_nursing == 0,"Residential", "Nursing"))  %>% 
+  ggplot(aes(x = diag_count_cat, y= adm_count)) +
+  geom_bar(stat = "identity") +
+  facet_wrap("ch_nursing") +
+  geom_text(aes(x = diag_count_cat, y = adm_count + 30, label = str_c(adm_pct, "%")),
+            size = 3) + 
+  ylab("COVID-19 admissions") +
+  xlab("Unique additional diagnosis codes")+
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        legend.title = element_blank(),
+        legend.position = "top",
+        legend.justification = c(1,0),) 
+
+
+ggsave(str_c(results_path_sprint4, "adm_causes/COVID_num_add_diags.png"), 
+         device = "png", dpi = 600, width = 7)
+
+# By diagnosis chapter
+apce_diag_covid_adm <-  apce_diag_covid_adm %>% 
+  categorise_ICD10(code = "dc", new_col =  "MainICD10Cat")
+
+adm_diag_chapter_summary <- apce_diag_covid_adm %>% 
+  distinct(ch_nursing, spellid, MainICD10Cat) %>%
+  group_by(ch_nursing, MainICD10Cat) %>% 
+  count(name = "adm_count") %>% 
+  left_join(chres_apcs_covid_ids %>%  
+              group_by(ch_nursing) %>%  
+              count(name = "total_adm"), by = "ch_nursing") %>% 
+  mutate(adm_pct = round(100* adm_count/total_adm, 1))
+
+MainICD10Cat_order <- adm_diag_chapter_summary %>% 
+  filter(ch_nursing == 1) %>% 
+  arrange(adm_count) %>% 
+  pull(MainICD10Cat)
+
+adm_diag_chapter_summary <- adm_diag_chapter_summary %>% 
+  mutate(MainICD10Cat = factor(MainICD10Cat, levels = paste0(MainICD10Cat_order)))
+
+write_csv(adm_diag_chapter_summary, str_c(results_path_sprint4, "adm_causes/COVID_num_ICD10cat.csv"))
+
+adm_diag_chapter_summary %>%
+  filter(MainICD10Cat != 15) %>% 
+  mutate(ch_nursing = if_else(ch_nursing == 0,"Residential", "Nursing"),
+         ch_nursing = factor(ch_nursing, c("Residential", "Nursing")))  %>% 
+  ggplot(aes(x = MainICD10Cat, y= adm_count)) +
+  geom_bar(stat = "identity") +
+  facet_wrap("ch_nursing", ncol = 2) +
+  geom_text(aes(x = MainICD10Cat, y = adm_count + 120, label = str_c(adm_pct, "%")),
+            size = 2) + 
+  ylab("Number of COVID-19 admissions") +
+  xlab("ICD10 chapter")+
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        legend.title = element_blank(),
+        legend.position = "top",
+        legend.justification = c(1,0),) +
+  coord_flip()
+
+
+ggsave(str_c(results_path_sprint4, "adm_causes/COVID_num_ICD10cat.png"), 
+       device = "png", dpi = 600, width = 8, height = 5)
+
+# Stroke and acute coronary syndrome
+
+apce_diag_covid_adm <-  apce_diag_covid_adm %>% 
+ mutate(stroke_code = if_else(detect_codes(dc, "I6[1|3|4].*"), 1, 0),
+        accorosyndr_code = if_else(detect_codes(dc, c("I200", "I21[0|1|2|3|4|9]", 
+                                                     "I22[0|1|2|8|9]", "I24[8|9]")), 1, 0))
+
+apce_diag_covid_adm  %>% 
+  distinct(ch_nursing, spellid, stroke_code, accorosyndr_code) %>%
+  filter(!(stroke_code == 0 & accorosyndr_code == 0)) %>% 
+  group_by(ch_nursing, stroke_code, accorosyndr_code) %>% 
+  count(name = "adm_count") %>% 
+  left_join(chres_apcs_covid_ids %>%  
+              group_by(ch_nursing) %>%  
+              count(name = "total_adm"), by = "ch_nursing") %>% 
+  mutate(adm_pct = round(100* adm_count/total_adm, 1)) %>% 
+  write_csv( str_c(results_path_sprint4, "adm_causes/COVID_stroke_accorosyndr.csv"))
+
 
 # Summary causes of elective admissions -----------------------------------
 
