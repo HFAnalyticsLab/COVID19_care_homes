@@ -1,6 +1,6 @@
 # COVID-19 risk and health care needs of care home residents in England 
 
-#### Project Status: Copmleted
+#### Project Status: Completed
 
 ## Project Description
 
